@@ -1,0 +1,99 @@
+﻿using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.UIElements;
+
+public class Movement : MonoBehaviour
+{
+    [SerializeField] private float playerSpeed = 5.0f;
+
+
+    [SerializeField] private GameObject projectile;
+    [SerializeField] private GameObject tripleProjectile;
+
+    [SerializeField] private float fireRate = 0.2f;
+
+    [SerializeField] private int life = 3;
+    private float timeToNextBullet = -1.0f;
+    [SerializeField]
+    private bool isTripleActive = false;
+
+    private GameObject spawn;
+    // Start is called before the first frame update
+    void Start()
+    {
+        spawn = GameObject.Find("SpawnManager");
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+        Move();
+        if (Input.GetKey(KeyCode.Space) && Time.time>timeToNextBullet)
+        {
+            Fire();
+        }
+    }
+
+    private void Move()
+    {
+        float MoveHorizontal = Input.GetAxisRaw("Horizontal");
+        float MoveVertical = Input.GetAxisRaw("Vertical");
+        transform.Translate(new Vector3(MoveHorizontal, MoveVertical, 0.0f) * Time.deltaTime * playerSpeed);
+        if (transform.position.x <= -14.5f)
+        {
+            transform.position = new Vector3(27.0f, transform.position.y, 0.0f);
+        }
+        else if (transform.position.x >= 27.0f)
+        {
+            transform.position = new Vector3(-14.5f, transform.position.y, 0.0f);
+        }
+
+        if (transform.position.y >= 10.0f)
+        {
+            transform.position = new Vector3(transform.position.x, -10.0f, 0.0f);
+        }
+        else if (transform.position.y <= -10.0f)
+        {
+            transform.position = new Vector3(transform.position.x, 10.0f, 0.0f);
+        }
+    }
+
+    private void Fire()
+       {
+           if (projectile || tripleProjectile)
+           {
+               if (isTripleActive == false)
+               {
+                   timeToNextBullet = Time.time + fireRate;
+                   Instantiate(projectile, new Vector3(this.transform.position.x, transform.position.y + 0.4f, 0.0f), Quaternion.identity);
+               }
+               else if (isTripleActive == true)
+               {
+                   timeToNextBullet = Time.time + fireRate;
+                   Instantiate(tripleProjectile, new Vector3(this.transform.position.x-1.4f, transform.position.y + 0.4f, 0.0f), Quaternion.identity);
+               }
+           }
+       }
+
+    public void OnDamage()
+    {
+        --life;
+        if (life == 0)
+        {
+            spawn.GetComponent<SpawnManager>().PlayerDead();
+            Destroy(this.gameObject);
+        }
+    }
+
+    public void SetActive()
+    {
+        this.isTripleActive = true;
+        StartCoroutine(DisableTriple());
+    }
+    private IEnumerator DisableTriple()
+    {
+        yield return new WaitForSeconds(8.0f);
+        isTripleActive = false;
+    }
+}

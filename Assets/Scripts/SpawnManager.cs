@@ -1,0 +1,45 @@
+﻿using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class SpawnManager : MonoBehaviour
+{
+    [SerializeField] private GameObject enemies;
+    [SerializeField] private GameObject enemyContainer;
+   // [SerializeField] private GameObject playerComp;
+    [SerializeField] private GameObject tripleShot;
+    private bool stopSpawning = false;
+   
+    // Start is called before the first frame update
+    void Start()
+    {
+        StartCoroutine(ObjectSpawn());
+        StartCoroutine(SpawnTriple());
+    }
+    IEnumerator ObjectSpawn()
+    {
+        while (!stopSpawning)
+        {
+            
+            float randomX = Random.Range(-11.0f,22.0f);
+            float randomY = Random.Range(-8.0f,6.54f);
+            GameObject temp = Instantiate(enemies, new Vector3(randomX,randomY,0.0f), Quaternion.identity);
+            temp.transform.parent = enemyContainer.transform;
+            yield return new WaitForSeconds(2.0f);
+        }
+    }
+
+    private IEnumerator SpawnTriple()
+    {
+        while (!stopSpawning)
+        {
+            Instantiate(tripleShot, new Vector3(Random.Range(-11.0f, 22.0f), Random.Range(-8.0f, 6.54f), 0.0f), Quaternion.identity);
+            yield return new WaitForSeconds(7.0f);
+        }
+    }
+
+    public void PlayerDead()
+    {
+        stopSpawning = true;
+    }
+}
