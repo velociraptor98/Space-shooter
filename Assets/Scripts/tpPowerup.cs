@@ -7,6 +7,7 @@ public class tpPowerup : MonoBehaviour
 {
     // Start is called before the first frame update
     [SerializeField] private float speed = 3.0f;
+    [SerializeField] private float PowerID = 0;
     void Start()
     {
         
@@ -32,7 +33,21 @@ public class tpPowerup : MonoBehaviour
         if (other.CompareTag("Player")==true)
         {
             GameObject player = GameObject.Find("Player");
-            player.GetComponent<Movement>().SetActive();
+            if(player)
+            {
+                switch(PowerID)
+                {
+                    case 0:
+                        player.GetComponent<Movement>().SetActive(); ;
+                        break;
+                    case 1:
+                        player.GetComponent<Movement>().SetSpeedActive();
+                        break;
+                    case 2:
+                        player.GetComponent<Movement>().SetShieldActive();
+                        break;
+                }
+            }
             Destroy(this.gameObject);
         }
     }

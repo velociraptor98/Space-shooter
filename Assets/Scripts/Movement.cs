@@ -17,12 +17,17 @@ public class Movement : MonoBehaviour
     private float timeToNextBullet = -1.0f;
     [SerializeField]
     private bool isTripleActive = false;
+    [SerializeField] private bool isSpeedActive = false;
+    [SerializeField] private bool isShieldActive = false;
+    [SerializeField] private GameObject shield;
+
 
     private GameObject spawn;
     // Start is called before the first frame update
     void Start()
     {
         spawn = GameObject.Find("SpawnManager");
+        shield.SetActive(false);
     }
 
     // Update is called once per frame
@@ -78,6 +83,12 @@ public class Movement : MonoBehaviour
 
     public void OnDamage()
     {
+        if(isShieldActive)
+        {
+            isShieldActive = false;
+            shield.SetActive(false);
+            return;
+        }
         --life;
         if (life == 0)
         {
@@ -90,6 +101,23 @@ public class Movement : MonoBehaviour
     {
         this.isTripleActive = true;
         StartCoroutine(DisableTriple());
+    }
+    public void SetSpeedActive()
+    {
+        this.isSpeedActive = true;
+        playerSpeed *= 2;
+        StartCoroutine(DisableSpeed());
+    }
+    public void SetShieldActive()
+    {
+        this.isShieldActive = true;
+        shield.SetActive(true);
+    }
+    private IEnumerator DisableSpeed()
+    {
+        yield return new WaitForSeconds(8.0f);
+        isSpeedActive = false;
+        playerSpeed /= 2;
     }
     private IEnumerator DisableTriple()
     {
