@@ -14,12 +14,14 @@ public class Movement : MonoBehaviour
     [SerializeField] private float fireRate = 0.2f;
 
     [SerializeField] private int life = 3;
+    [SerializeField]private int score = 0;
     private float timeToNextBullet = -1.0f;
     [SerializeField]
     private bool isTripleActive = false;
     [SerializeField] private bool isSpeedActive = false;
     [SerializeField] private bool isShieldActive = false;
     [SerializeField] private GameObject shield;
+    private UManager UIManager;
 
 
     private GameObject spawn;
@@ -28,6 +30,7 @@ public class Movement : MonoBehaviour
     {
         spawn = GameObject.Find("SpawnManager");
         shield.SetActive(false);
+        UIManager = GameObject.FindGameObjectWithTag("UI").GetComponent<UManager>();
     }
 
     // Update is called once per frame
@@ -90,10 +93,12 @@ public class Movement : MonoBehaviour
             return;
         }
         --life;
-        if (life == 0)
+        UIManager.UpdateLives(life);
+        if (life <= 0)
         {
             spawn.GetComponent<SpawnManager>().PlayerDead();
             Destroy(this.gameObject);
+            UIManager.GameOver();
         }
     }
 
@@ -123,5 +128,19 @@ public class Movement : MonoBehaviour
     {
         yield return new WaitForSeconds(8.0f);
         isTripleActive = false;
+    }
+    public void AddScore()
+    {
+        score += 10;
+        UIManager.UpdateText();
+
+    }
+    public int GetScore()
+    {
+        return score;
+    }
+    public int GetLife()
+    {
+        return life;
     }
 }

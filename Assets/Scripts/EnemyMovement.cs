@@ -7,8 +7,12 @@ using Random = UnityEngine.Random;
 public class EnemyMovement : MonoBehaviour
 {
     [SerializeField] private float speed = 8.0f;
-    
+    GameObject player;
     // Update is called once per frame
+    private void Start()
+    {
+        player = GameObject.FindGameObjectWithTag("Player");
+    }
     void Update()
     {
         Movement();
@@ -30,13 +34,13 @@ public class EnemyMovement : MonoBehaviour
         {
             Destroy(other.gameObject);
             Destroy(this.gameObject);
+            player.GetComponent<Movement>().AddScore();
+            
         }
         else if (other.transform.CompareTag("Player")==true)
         {
             other.transform.GetComponent<Movement>().OnDamage();
             Destroy(this.gameObject);
         }
-        
-        
     }
 }
