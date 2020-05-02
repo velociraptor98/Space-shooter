@@ -39,6 +39,7 @@ public class EnemyMovement : MonoBehaviour
             animator.SetTrigger("OnEnemyDeath");
             Destroy(other.gameObject);
             this.speed = 0.0f;
+            Destroy(gameObject.GetComponent<Collider2D>());
             Destroy(this.gameObject,2.8f);
             player.GetComponent<Movement>().AddScore();
             source.Play();
@@ -49,6 +50,7 @@ public class EnemyMovement : MonoBehaviour
             animator.SetTrigger("OnEnemyDeath");
             this.speed = 0.0f;
             other.transform.GetComponent<Movement>().OnDamage();
+            Destroy(gameObject.GetComponent<Collider2D>());
             Destroy(this.gameObject,2.8f);
             source.Play();
         }
