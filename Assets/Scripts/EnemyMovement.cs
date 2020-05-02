@@ -10,10 +10,12 @@ public class EnemyMovement : MonoBehaviour
     private GameObject player;
     private Animator animator;
     // Update is called once per frame
+    private AudioSource source;
     private void Start()
     {
         animator = GetComponent<Animator>();
         player = GameObject.FindGameObjectWithTag("Player");
+        source = this.GetComponent<AudioSource>();
     }
     void Update()
     {
@@ -39,6 +41,7 @@ public class EnemyMovement : MonoBehaviour
             this.speed = 0.0f;
             Destroy(this.gameObject,2.8f);
             player.GetComponent<Movement>().AddScore();
+            source.Play();
             
         }
         else if (other.transform.CompareTag("Player")==true)
@@ -47,6 +50,7 @@ public class EnemyMovement : MonoBehaviour
             this.speed = 0.0f;
             other.transform.GetComponent<Movement>().OnDamage();
             Destroy(this.gameObject,2.8f);
+            source.Play();
         }
     }
 }

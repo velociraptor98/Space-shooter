@@ -8,10 +8,12 @@ public class Asteroid : MonoBehaviour
     [SerializeField] private float rotSpeed = 3.0f;
     [SerializeField] GameObject explosion;
     private SpawnManager spawnManager;
+    private AudioSource source;
 
     private void Start()
     {
         spawnManager = GameObject.Find("SpawnManager").GetComponent<SpawnManager>();
+        source = this.GetComponent<AudioSource>();
     }
     void Update()
     {
@@ -27,6 +29,7 @@ public class Asteroid : MonoBehaviour
                 Destroy(collision.gameObject);
                 spawnManager.StartSpawn();
                 Destroy(this.gameObject,0.2f);
+                source.Play();
             }
         }
     }

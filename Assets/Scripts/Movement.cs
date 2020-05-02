@@ -18,6 +18,9 @@ public class Movement : MonoBehaviour
     [SerializeField] private bool isShieldActive = false;
     [SerializeField] private GameObject shield;
     [SerializeField] private GameObject leftFire, rightFire;
+    [SerializeField] private AudioSource source;
+    [SerializeField] private AudioClip laserclip;
+    [SerializeField] private AudioClip powerclip;
     private UManager UIManager;
     private GameObject spawn;
     // Start is called before the first frame update
@@ -77,6 +80,8 @@ public class Movement : MonoBehaviour
                    Instantiate(tripleProjectile, new Vector3(this.transform.position.x-1.4f, transform.position.y + 0.4f, 0.0f), Quaternion.identity);
                }
            }
+        source.clip = laserclip;
+        source.Play();
        }
 
     public void OnDamage()
@@ -84,7 +89,7 @@ public class Movement : MonoBehaviour
         if(isShieldActive)
         {
             isShieldActive = false;
-            shield.SetActive(false);
+            shield.SetActive(false); 
             return;
         }
         --life;
@@ -107,17 +112,23 @@ public class Movement : MonoBehaviour
 
     public void SetActive()
     {
+        source.clip = powerclip;
+        source.Play();
         this.isTripleActive = true;
         StartCoroutine(DisableTriple());
     }
     public void SetSpeedActive()
     {
+        source.clip = powerclip;
+        source.Play();
         this.isSpeedActive = true;
         playerSpeed *= 2;
         StartCoroutine(DisableSpeed());
     }
     public void SetShieldActive()
     {
+        source.clip = powerclip;
+        source.Play();
         this.isShieldActive = true;
         shield.SetActive(true);
     }
