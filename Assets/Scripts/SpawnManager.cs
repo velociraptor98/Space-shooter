@@ -6,20 +6,18 @@ public class SpawnManager : MonoBehaviour
 {
     [SerializeField] private GameObject enemies;
     [SerializeField] private GameObject enemyContainer;
-   // [SerializeField] private GameObject playerComp;
-    //[SerializeField] private GameObject tripleShot;
-    //[SerializeField] private GameObject speedPowerup;
     [SerializeField] private GameObject[] powerups;
     private bool stopSpawning = false;
    
     // Start is called before the first frame update
-    void Start()
+    public void StartSpawn()
     {
         StartCoroutine(ObjectSpawn());
         StartCoroutine(SpawnPowerUps());
     }
     IEnumerator ObjectSpawn()
     {
+        yield return new WaitForSeconds(2.5f);
         while (!stopSpawning)
         {
             
@@ -33,6 +31,7 @@ public class SpawnManager : MonoBehaviour
 
     private IEnumerator SpawnPowerUps()
     {
+        yield return new WaitForSeconds(2.5f);
         while (!stopSpawning)
         {
             int powerChoice = Random.Range(0,3);

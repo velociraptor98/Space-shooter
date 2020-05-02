@@ -7,10 +7,12 @@ using Random = UnityEngine.Random;
 public class EnemyMovement : MonoBehaviour
 {
     [SerializeField] private float speed = 8.0f;
-    GameObject player;
+    private GameObject player;
+    private Animator animator;
     // Update is called once per frame
     private void Start()
     {
+        animator = GetComponent<Animator>();
         player = GameObject.FindGameObjectWithTag("Player");
     }
     void Update()
@@ -32,15 +34,19 @@ public class EnemyMovement : MonoBehaviour
     {
         if (other.transform.CompareTag("Bullet") == true)
         {
+            animator.SetTrigger("OnEnemyDeath");
             Destroy(other.gameObject);
-            Destroy(this.gameObject);
+            this.speed = 0.0f;
+            Destroy(this.gameObject,2.8f);
             player.GetComponent<Movement>().AddScore();
             
         }
         else if (other.transform.CompareTag("Player")==true)
         {
+            animator.SetTrigger("OnEnemyDeath");
+            this.speed = 0.0f;
             other.transform.GetComponent<Movement>().OnDamage();
-            Destroy(this.gameObject);
+            Destroy(this.gameObject,2.8f);
         }
     }
 }

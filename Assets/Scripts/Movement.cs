@@ -6,13 +6,9 @@ using UnityEngine.UIElements;
 public class Movement : MonoBehaviour
 {
     [SerializeField] private float playerSpeed = 5.0f;
-
-
     [SerializeField] private GameObject projectile;
     [SerializeField] private GameObject tripleProjectile;
-
     [SerializeField] private float fireRate = 0.2f;
-
     [SerializeField] private int life = 3;
     [SerializeField]private int score = 0;
     private float timeToNextBullet = -1.0f;
@@ -21,9 +17,8 @@ public class Movement : MonoBehaviour
     [SerializeField] private bool isSpeedActive = false;
     [SerializeField] private bool isShieldActive = false;
     [SerializeField] private GameObject shield;
+    [SerializeField] private GameObject leftFire, rightFire;
     private UManager UIManager;
-
-
     private GameObject spawn;
     // Start is called before the first frame update
     void Start()
@@ -93,6 +88,14 @@ public class Movement : MonoBehaviour
             return;
         }
         --life;
+        if(life == 2)
+        {
+            leftFire.SetActive(true);
+        }
+        if(life == 1)
+        {
+            rightFire.SetActive(true);
+        }
         UIManager.UpdateLives(life);
         if (life <= 0)
         {
