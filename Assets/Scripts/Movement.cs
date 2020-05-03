@@ -5,7 +5,7 @@ using UnityEngine.UIElements;
 
 public class Movement : MonoBehaviour
 {
-    [SerializeField] private float playerSpeed = 5.0f;
+    [SerializeField] private float playerSpeed = 20.0f;
     [SerializeField] private GameObject projectile;
     [SerializeField] private GameObject tripleProjectile;
     [SerializeField] private float fireRate = 0.2f;
@@ -122,7 +122,7 @@ public class Movement : MonoBehaviour
         source.clip = powerclip;
         source.Play();
         this.isSpeedActive = true;
-        playerSpeed *= 2;
+        playerSpeed *= 1.5f;
         StartCoroutine(DisableSpeed());
     }
     public void SetShieldActive()
@@ -136,7 +136,7 @@ public class Movement : MonoBehaviour
     {
         yield return new WaitForSeconds(8.0f);
         isSpeedActive = false;
-        playerSpeed /= 2;
+        playerSpeed /= 1.5f;
     }
     private IEnumerator DisableTriple()
     {
