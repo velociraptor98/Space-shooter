@@ -56,15 +56,9 @@ public class Movement : MonoBehaviour
     private void Awake()
     {
         Instance = this;
-        // Measured from the Pixel Perfect Camera's reference resolution: the camera's own aspect isn't
-        // settled until it first renders, and the intro needs the play area before then.
-        Camera cam = Camera.main;
-        var pixelPerfect = cam.GetComponent<UnityEngine.U2D.PixelPerfectCamera>();
-        float aspect = pixelPerfect ? pixelPerfect.refResolutionX / (float)pixelPerfect.refResolutionY : cam.aspect;
-        float halfHeight = cam.orthographicSize - screenMargin.y;
-        float halfWidth = cam.orthographicSize * aspect - screenMargin.x;
-        Vector2 center = cam.transform.position;
-        playArea = new Rect(center.x - halfWidth, center.y - halfHeight, halfWidth * 2.0f, halfHeight * 2.0f);
+        Rect view = Playfield.Bounds;
+        playArea = new Rect(view.xMin + screenMargin.x, view.yMin + screenMargin.y,
+                            view.width - screenMargin.x * 2.0f, view.height - screenMargin.y * 2.0f);
     }
 
     private void OnDestroy()

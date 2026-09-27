@@ -82,7 +82,7 @@ GROUPS = [
          alpha="solid", outline=True, strip_label=True),
     dict(name="asteroid", glob="Asteroid.png", scale=1.0, colors=["ink", "steel", "slate", "silver"], alpha="solid", outline=True, flatten=True),
     dict(name="laser", glob="laser.png", scale=0.83, colors=["red", "orange", "yellow", "white"], alpha="solid"),
-    dict(name="background", glob="SpaceBG_Overlay.png", scale=1.89, colors=["ink", "navy", "steel", "teal", "plum", "blue", "slate"],
+    dict(name="background", glob="SpaceBG_Overlay.png", scale=2.02, colors=["ink", "navy", "steel", "teal", "plum", "blue", "slate"],
          alpha="opaque", dither=True),
     dict(name="lives", glob="UI/Lives/*.png", ui_size=(64, 32), colors=HULL + ["sky", "orange"], alpha="solid"),
     dict(name="title", glob="UI/MainMenu.png", ui_size=(192, 192),

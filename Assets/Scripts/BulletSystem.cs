@@ -112,11 +112,9 @@ public class BulletSystem : MonoBehaviour
 
     private void Update()
     {
-        Camera cam = Camera.main;
-        float halfHeight = cam.orthographicSize + offscreenMargin;
-        float halfWidth = cam.orthographicSize * cam.aspect + offscreenMargin;
-        Vector2 center = cam.transform.position;
-        bounds = new Rect(center.x - halfWidth, center.y - halfHeight, halfWidth * 2.0f, halfHeight * 2.0f);
+        Rect view = Playfield.Bounds;
+        bounds = new Rect(view.xMin - offscreenMargin, view.yMin - offscreenMargin,
+                          view.width + offscreenMargin * 2.0f, view.height + offscreenMargin * 2.0f);
 
         Movement player = Movement.Instance;
         bool canHit = player && player.IsVulnerable;

@@ -8,7 +8,7 @@ public class Projectile : MonoBehaviour
     void Update()
     {
         transform.Translate(Vector3.up * Time.deltaTime * speed);
-        if (transform.position.y >= 9.0f)
+        if (transform.position.y >= Playfield.Top + 1.0f)
         {
             if (transform.parent)
             {

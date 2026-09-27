@@ -5,13 +5,6 @@ using UnityEngine.Serialization;
 
 public class SpawnManager : MonoBehaviour
 {
-    // Playfield bounds shared with anything that spawns or re-enters from the top.
-    public const float MinX = -8.0f;
-    public const float MaxX = 19.0f;
-    public const float CenterX = (MinX + MaxX) * 0.5f;
-    public const float TopY = 9.98f;
-    public const float BottomY = -9.51f;
-
     // Small, fast and fragile; fires aimed bursts.
     [SerializeField] private GameObject scout;
     // The standard ship; fires rings.
@@ -29,6 +22,12 @@ public class SpawnManager : MonoBehaviour
     [SerializeField] private int heavyEvery = 5;
     private bool stopSpawning = false;
     private int wave;
+
+    // Where ships appear: just above the screen, inset from its sides.
+    private static float SpawnY => Playfield.Top + 1.5f;
+    private static float MinX => Playfield.Left + 1.5f;
+    private static float MaxX => Playfield.Right - 1.5f;
+    private static float CenterX => Playfield.CenterX;
 
     // Start is called before the first frame update
     public void StartSpawn()
@@ -69,7 +68,7 @@ public class SpawnManager : MonoBehaviour
                 // Scout pincers: zig-zaggers mirrored across the centre, crossing paths.
                 for (int pair = 0; pair < 2 + extra && !stopSpawning; ++pair)
                 {
-                    float offset = Random.Range(3.0f, 10.0f);
+                    float offset = Random.Range(3.0f, (MaxX - MinX) * 0.4f);
                     SpawnEnemy(scout, CenterX - offset, FlightPattern.ZigZag, 1.0f);
                     SpawnEnemy(scout, CenterX + offset, FlightPattern.ZigZag, -1.0f);
                     yield return new WaitForSeconds(0.7f);
@@ -129,7 +128,7 @@ public class SpawnManager : MonoBehaviour
 
     private void SpawnEnemy(GameObject prefab, float x, FlightPattern pattern, float direction)
     {
-        GameObject temp = Instantiate(prefab, new Vector3(x, TopY, 0.0f), Quaternion.identity);
+        GameObject temp = Instantiate(prefab, new Vector3(x, SpawnY, 0.0f), Quaternion.identity);
         temp.transform.parent = enemyContainer.transform;
         temp.GetComponent<EnemyMovement>().Launch(pattern, direction);
     }
@@ -140,7 +139,7 @@ public class SpawnManager : MonoBehaviour
         while (!stopSpawning)
         {
             int powerChoice = Random.Range(0,3);
-            Instantiate(powerups[powerChoice], new Vector3(Random.Range(-8.0f, 19.0f), 9.98f, 0.0f), Quaternion.identity);
+            Instantiate(powerups[powerChoice], new Vector3(Random.Range(MinX, MaxX), SpawnY, 0.0f), Quaternion.identity);
             yield return new WaitForSeconds(7.0f);
         }
     }

@@ -22,7 +22,9 @@ public class EnemyMovement : MonoBehaviour
     [SerializeField] private float swoopMaxAngle = 75.0f;
     [SerializeField] private float diveHoverTime = 0.8f;
     [SerializeField] private float diveSpeedMultiplier = 1.8f;
-    [SerializeField] private Vector2 holdHeightRange = new Vector2(3.5f, 5.0f);
+    // How far below the top of the screen a Hold ship parks, and a Dive ship hovers.
+    [SerializeField] private Vector2 holdDepthRange = new Vector2(2.5f, 4.0f);
+    [SerializeField] private Vector2 hoverDepthRange = new Vector2(2.5f, 6.0f);
     [SerializeField] private float holdDuration = 7.0f;
     [SerializeField] private float maxBankAngle = 35.0f;
     [SerializeField] private float bankSmoothing = 8.0f;
@@ -65,10 +67,10 @@ public class EnemyMovement : MonoBehaviour
 
         // Ships that have flown their path leave for good rather than looping, keeping the screen readable.
         Vector3 position = transform.position;
-        bool leftScreen = position.y < SpawnManager.BottomY
-            || (isRetreating && position.y > SpawnManager.TopY + 1.0f)
-            || position.x < SpawnManager.MinX - 3.0f
-            || position.x > SpawnManager.MaxX + 3.0f;
+        bool leftScreen = position.y < Playfield.Bottom - 2.0f
+            || (isRetreating && position.y > Playfield.Top + 2.5f)
+            || position.x < Playfield.Left - 3.0f
+            || position.x > Playfield.Right + 3.0f;
         if (leftScreen)
         {
             Destroy(gameObject);
@@ -79,8 +81,9 @@ public class EnemyMovement : MonoBehaviour
     {
         pathTime = 0.0f;
         swoopAngle = 0.0f;
-        swoopStartY = Random.Range(1.0f, 4.0f);
-        hoverY = pattern == FlightPattern.Hold ? Random.Range(holdHeightRange.x, holdHeightRange.y) : Random.Range(2.0f, 5.0f);
+        swoopStartY = Playfield.Top - Random.Range(3.5f, 7.0f);
+        Vector2 depth = pattern == FlightPattern.Hold ? holdDepthRange : hoverDepthRange;
+        hoverY = Playfield.Top - Random.Range(depth.x, depth.y);
         hoverTimer = pattern == FlightPattern.Hold ? holdDuration : diveHoverTime;
         isDiving = false;
         isRetreating = false;

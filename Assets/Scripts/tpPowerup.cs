@@ -22,7 +22,7 @@ public class tpPowerup : MonoBehaviour
     private void Move()
     {
         transform.Translate(Vector3.down*speed*Time.deltaTime);
-        if (this.transform.position.y < -10.5f)
+        if (this.transform.position.y < Playfield.Bottom - 1.0f)
         {
             Destroy(this.gameObject);
         }
