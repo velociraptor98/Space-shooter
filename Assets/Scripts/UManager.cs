@@ -17,7 +17,15 @@ public class UManager : MonoBehaviour
     private Text GameOverText;
     [SerializeField]
     private Text Reset_Text;
+    // Centre-screen callouts such as "GET READY" and wave warnings.
+    [SerializeField]
+    private Text bannerText;
     private GameObject GameManager;
+    private Coroutine banner;
+    private void Awake()
+    {
+        bannerText.enabled = false;
+    }
     private void Start()
     {
         GameManager = GameObject.Find("GameManager");
@@ -25,6 +33,26 @@ public class UManager : MonoBehaviour
         GameOverText.enabled = false;
         Reset_Text.enabled = false;
         UpdateText();
+    }
+    public void ShowBanner(string message, float duration)
+    {
+        if (banner != null)
+        {
+            StopCoroutine(banner);
+        }
+        banner = StartCoroutine(Banner(message, duration));
+    }
+    private IEnumerator Banner(string message, float duration)
+    {
+        bannerText.text = message;
+        // Blink on and off like an arcade attract screen, then clear.
+        for (float t = 0.0f; t < duration; t += 0.25f)
+        {
+            bannerText.enabled = !bannerText.enabled || t == 0.0f;
+            yield return new WaitForSeconds(0.25f);
+        }
+        bannerText.enabled = false;
+        banner = null;
     }
     public void UpdateText()
     {

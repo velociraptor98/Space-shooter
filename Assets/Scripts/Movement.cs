@@ -1,7 +1,7 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UIElements;
+using UnityEngine.InputSystem;
 
 public class Movement : MonoBehaviour
 {
@@ -21,48 +21,142 @@ public class Movement : MonoBehaviour
     [SerializeField] private AudioSource source;
     [SerializeField] private AudioClip laserclip;
     [SerializeField] private AudioClip powerclip;
+    // How quickly the ship reaches (and sheds) full speed, in units per second squared.
+    [SerializeField] private float acceleration = 150.0f;
+    // Sprites from level flight (index 0) to a full bank, used as the ship moves sideways.
+    [SerializeField] private Sprite[] bankLeftFrames;
+    [SerializeField] private Sprite[] bankRightFrames;
+    [SerializeField] private GameObject hitSparks;
+    // The only part of the ship bullets can hit, in world units. Far smaller than the sprite, as in any bullet hell.
+    [SerializeField] private float hitboxRadius = 0.1f;
+    // Shown while focusing so the player can thread gaps precisely.
+    [SerializeField] private GameObject hitboxMarker;
+    // Holding Focus slows the ship to this fraction of its speed.
+    [SerializeField] private float focusSpeedMultiplier = 0.45f;
+    [SerializeField] private float invulnerableTime = 2.0f;
+    [SerializeField] private float blinkInterval = 0.08f;
+    // How far inside the screen edge the ship's centre is kept.
+    [SerializeField] private Vector2 screenMargin = new Vector2(0.7f, 0.9f);
     private UManager UIManager;
     private GameObject spawn;
+    private InputAction moveAction;
+    private InputAction fireAction;
+    private InputAction focusAction;
+    private SpriteRenderer body;
+    private Vector2 velocity;
+    private Rect playArea;
+    private float invulnerableUntil;
+    private bool controlsEnabled = true;
+
+    // The live player ship, or null once it has been destroyed.
+    public static Movement Instance { get; private set; }
+    public float HitboxRadius => hitboxRadius;
+    public bool IsVulnerable => controlsEnabled && Time.time >= invulnerableUntil;
+
+    private void Awake()
+    {
+        Instance = this;
+        // Measured from the Pixel Perfect Camera's reference resolution: the camera's own aspect isn't
+        // settled until it first renders, and the intro needs the play area before then.
+        Camera cam = Camera.main;
+        var pixelPerfect = cam.GetComponent<UnityEngine.U2D.PixelPerfectCamera>();
+        float aspect = pixelPerfect ? pixelPerfect.refResolutionX / (float)pixelPerfect.refResolutionY : cam.aspect;
+        float halfHeight = cam.orthographicSize - screenMargin.y;
+        float halfWidth = cam.orthographicSize * aspect - screenMargin.x;
+        Vector2 center = cam.transform.position;
+        playArea = new Rect(center.x - halfWidth, center.y - halfHeight, halfWidth * 2.0f, halfHeight * 2.0f);
+    }
+
+    private void OnDestroy()
+    {
+        if (Instance == this)
+        {
+            Instance = null;
+        }
+    }
+
     // Start is called before the first frame update
     void Start()
     {
         spawn = GameObject.Find("SpawnManager");
         shield.SetActive(false);
         UIManager = GameObject.FindGameObjectWithTag("UI").GetComponent<UManager>();
+        moveAction = InputSystem.actions.FindAction("Player/Move", true);
+        fireAction = InputSystem.actions.FindAction("Player/Fire", true);
+        focusAction = InputSystem.actions.FindAction("Player/Focus", true);
+        body = GetComponent<SpriteRenderer>();
     }
 
     // Update is called once per frame
     void Update()
     {
-        Move();
-        if (Input.GetKey(KeyCode.Space) && Time.time>timeToNextBullet)
+        if (!controlsEnabled)
+        {
+            return;
+        }
+        bool focusing = focusAction.IsPressed();
+        if (hitboxMarker)
+        {
+            hitboxMarker.SetActive(focusing);
+        }
+        Move(focusing);
+        Blink();
+        if (fireAction.IsPressed() && Time.time>timeToNextBullet)
         {
             Fire();
         }
     }
 
-    private void Move()
+    // Flies the ship up from below the screen into its starting spot, with controls locked until it arrives.
+    public void PlayIntro(float duration)
     {
-        float MoveHorizontal = Input.GetAxisRaw("Horizontal");
-        float MoveVertical = Input.GetAxisRaw("Vertical");
-        transform.Translate(new Vector3(MoveHorizontal, MoveVertical, 0.0f) * Time.deltaTime * playerSpeed);
-        if (transform.position.x <= -14.5f)
-        {
-            transform.position = new Vector3(27.0f, transform.position.y, 0.0f);
-        }
-        else if (transform.position.x >= 27.0f)
-        {
-            transform.position = new Vector3(-14.5f, transform.position.y, 0.0f);
-        }
+        StartCoroutine(FlyIn(duration));
+    }
 
-        if (transform.position.y >= 10.0f)
+    private IEnumerator FlyIn(float duration)
+    {
+        controlsEnabled = false;
+        Vector3 end = transform.position;
+        Vector3 start = new Vector3(end.x, playArea.yMin - 4.0f, end.z);
+        for (float t = 0.0f; t < duration; t += Time.deltaTime)
         {
-            transform.position = new Vector3(transform.position.x, -10.0f, 0.0f);
+            float eased = 1.0f - Mathf.Pow(1.0f - t / duration, 3.0f);
+            transform.position = Vector3.LerpUnclamped(start, end, eased);
+            yield return null;
         }
-        else if (transform.position.y <= -10.0f)
+        transform.position = end;
+        controlsEnabled = true;
+    }
+
+    private void Move(bool focusing)
+    {
+        // Ease towards the input velocity rather than snapping to it, so starts, stops and turns glide.
+        float speed = playerSpeed * (focusing ? focusSpeedMultiplier : 1.0f);
+        Vector2 targetVelocity = moveAction.ReadValue<Vector2>() * speed;
+        velocity = Vector2.MoveTowards(velocity, targetVelocity, acceleration * Time.deltaTime);
+        Vector2 position = (Vector2)transform.position + velocity * Time.deltaTime;
+        position.x = Mathf.Clamp(position.x, playArea.xMin, playArea.xMax);
+        position.y = Mathf.Clamp(position.y, playArea.yMin, playArea.yMax);
+        transform.position = new Vector3(position.x, position.y, transform.position.z);
+        Bank();
+    }
+
+    private void Bank()
+    {
+        float bank = Mathf.Clamp(velocity.x / playerSpeed, -1.0f, 1.0f);
+        Sprite[] frames = bank < 0.0f ? bankLeftFrames : bankRightFrames;
+        if (frames == null || frames.Length == 0)
         {
-            transform.position = new Vector3(transform.position.x, 10.0f, 0.0f);
+            return;
         }
+        body.sprite = frames[Mathf.RoundToInt(Mathf.Abs(bank) * (frames.Length - 1))];
+    }
+
+    // Flicker the ship while it can't be hit, the classic signal for recovery time.
+    private void Blink()
+    {
+        bool invulnerable = Time.time < invulnerableUntil;
+        body.enabled = !invulnerable || Mathf.FloorToInt(Time.time / blinkInterval) % 2 == 0;
     }
 
     private void Fire()
@@ -86,13 +180,27 @@ public class Movement : MonoBehaviour
 
     public void OnDamage()
     {
+        if (!IsVulnerable)
+        {
+            return;
+        }
+        if (hitSparks)
+        {
+            Instantiate(hitSparks, transform.position, Quaternion.identity);
+        }
+        // Wipe the screen and grant a moment's grace, so one mistake doesn't cascade into several hits.
+        BulletSystem.Clear();
+        invulnerableUntil = Time.time + invulnerableTime;
         if(isShieldActive)
         {
             isShieldActive = false;
-            shield.SetActive(false); 
+            shield.SetActive(false);
+            GameFeel.Impact(0.3f);
             return;
         }
         --life;
+        // Losing the ship hits hardest; any other hull damage still jolts the screen.
+        GameFeel.Impact(life <= 0 ? 1.0f : 0.55f, life <= 0 ? 0.15f : 0.06f);
         if(life == 2)
         {
             leftFire.SetActive(true);
@@ -143,9 +251,9 @@ public class Movement : MonoBehaviour
         yield return new WaitForSeconds(8.0f);
         isTripleActive = false;
     }
-    public void AddScore()
+    public void AddScore(int points)
     {
-        score += 10;
+        score += points;
         UIManager.UpdateText();
 
     }

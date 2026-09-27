@@ -1,0 +1,180 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1001 &4059697647052988249
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 120356502, guid: dee9cd4c1d1999b44b22fa3474008b17, type: 3}
+      propertyPath: m_Controller
+      value: 
+      objectReference: {fileID: 22100000, guid: 82ab505bcbc5d479f9b3cd003f476a00, type: 2}
+    - target: {fileID: 952726980, guid: dee9cd4c1d1999b44b22fa3474008b17, type: 3}
+      propertyPath: speed
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 2442539865020007080, guid: dee9cd4c1d1999b44b22fa3474008b17, type: 3}
+      propertyPath: m_Name
+      value: Enemy Heavy
+      objectReference: {fileID: 0}
+    - target: {fileID: 2971444906834848831, guid: dee9cd4c1d1999b44b22fa3474008b17, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 1.35
+      objectReference: {fileID: 0}
+    - target: {fileID: 2971444906834848831, guid: dee9cd4c1d1999b44b22fa3474008b17, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 1.35
+      objectReference: {fileID: 0}
+    - target: {fileID: 2971444906834848831, guid: dee9cd4c1d1999b44b22fa3474008b17, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 1.35
+      objectReference: {fileID: 0}
+    - target: {fileID: 2971444906834848831, guid: dee9cd4c1d1999b44b22fa3474008b17, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 7.3624334
+      objectReference: {fileID: 0}
+    - target: {fileID: 2971444906834848831, guid: dee9cd4c1d1999b44b22fa3474008b17, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: -3.3249478
+      objectReference: {fileID: 0}
+    - target: {fileID: 2971444906834848831, guid: dee9cd4c1d1999b44b22fa3474008b17, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -5.270508
+      objectReference: {fileID: 0}
+    - target: {fileID: 2971444906834848831, guid: dee9cd4c1d1999b44b22fa3474008b17, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2971444906834848831, guid: dee9cd4c1d1999b44b22fa3474008b17, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2971444906834848831, guid: dee9cd4c1d1999b44b22fa3474008b17, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2971444906834848831, guid: dee9cd4c1d1999b44b22fa3474008b17, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2971444906834848831, guid: dee9cd4c1d1999b44b22fa3474008b17, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2971444906834848831, guid: dee9cd4c1d1999b44b22fa3474008b17, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2971444906834848831, guid: dee9cd4c1d1999b44b22fa3474008b17, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3817911151951691584, guid: dee9cd4c1d1999b44b22fa3474008b17, type: 3}
+      propertyPath: count
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 3817911151951691584, guid: dee9cd4c1d1999b44b22fa3474008b17, type: 3}
+      propertyPath: bullet
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 3817911151951691584, guid: dee9cd4c1d1999b44b22fa3474008b17, type: 3}
+      propertyPath: pattern
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 3817911151951691584, guid: dee9cd4c1d1999b44b22fa3474008b17, type: 3}
+      propertyPath: shotGap
+      value: 0.12
+      objectReference: {fileID: 0}
+    - target: {fileID: 3817911151951691584, guid: dee9cd4c1d1999b44b22fa3474008b17, type: 3}
+      propertyPath: spinSpeed
+      value: 50
+      objectReference: {fileID: 0}
+    - target: {fileID: 3817911151951691584, guid: dee9cd4c1d1999b44b22fa3474008b17, type: 3}
+      propertyPath: bulletSpeed
+      value: 4.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 3817911151951691584, guid: dee9cd4c1d1999b44b22fa3474008b17, type: 3}
+      propertyPath: bulletTurnRate
+      value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 3817911151951691584, guid: dee9cd4c1d1999b44b22fa3474008b17, type: 3}
+      propertyPath: muzzleOffset.y
+      value: -0.3
+      objectReference: {fileID: 0}
+    - target: {fileID: 3817911151951691584, guid: dee9cd4c1d1999b44b22fa3474008b17, type: 3}
+      propertyPath: volleyInterval
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3817911151951691584, guid: dee9cd4c1d1999b44b22fa3474008b17, type: 3}
+      propertyPath: firstVolleyDelay
+      value: 1.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 4644778376679384900, guid: dee9cd4c1d1999b44b22fa3474008b17, type: 3}
+      propertyPath: m_SpriteTilingProperty.oldSize.x
+      value: 5.141612
+      objectReference: {fileID: 0}
+    - target: {fileID: 4644778376679384900, guid: dee9cd4c1d1999b44b22fa3474008b17, type: 3}
+      propertyPath: m_SpriteTilingProperty.oldSize.y
+      value: 5.141612
+      objectReference: {fileID: 0}
+    - target: {fileID: 4989893161662866219, guid: dee9cd4c1d1999b44b22fa3474008b17, type: 3}
+      propertyPath: maxHealth
+      value: 40
+      objectReference: {fileID: 0}
+    - target: {fileID: 4989893161662866219, guid: dee9cd4c1d1999b44b22fa3474008b17, type: 3}
+      propertyPath: deathShake
+      value: 0.8
+      objectReference: {fileID: 0}
+    - target: {fileID: 4989893161662866219, guid: dee9cd4c1d1999b44b22fa3474008b17, type: 3}
+      propertyPath: scoreValue
+      value: 250
+      objectReference: {fileID: 0}
+    - target: {fileID: 4989893161662866219, guid: dee9cd4c1d1999b44b22fa3474008b17, type: 3}
+      propertyPath: deathFreeze
+      value: 0.12
+      objectReference: {fileID: 0}
+    - target: {fileID: 6393691818120993949, guid: dee9cd4c1d1999b44b22fa3474008b17, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: 21300000, guid: 2da5d6c1998ab4ceab84c112daa08467, type: 3}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 2442539865020007080, guid: dee9cd4c1d1999b44b22fa3474008b17, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2505239420315494974}
+  m_SourcePrefab: {fileID: 100100000, guid: dee9cd4c1d1999b44b22fa3474008b17, type: 3}
+--- !u!1 &1851916852858101233 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 2442539865020007080, guid: dee9cd4c1d1999b44b22fa3474008b17, type: 3}
+  m_PrefabInstance: {fileID: 4059697647052988249}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &2505239420315494974
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1851916852858101233}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2718b7a99043542e5bc3cc7a1c9918a8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BulletEmitter
+  pattern: 1
+  bullet: 0
+  bulletSpeed: 3
+  bulletAcceleration: 0
+  count: 18
+  spreadAngle: 360
+  shotsPerVolley: 1
+  shotGap: 0.1
+  volleyInterval: 3
+  spinSpeed: 0
+  bulletTurnRate: 0
+  firstVolleyDelay: 2.5
+  muzzleOffset: {x: 0, y: -0.3}
