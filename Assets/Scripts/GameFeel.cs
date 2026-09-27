@@ -4,13 +4,12 @@ using UnityEngine;
 // Screen shake and hit-stop for impacts. Sits on the camera; anything can call GameFeel.Impact().
 // The shake moves the camera in whole retro pixels so it reads as a chunky 16-bit jolt rather than
 // a smooth wobble, and hit-stop freezes time for a few frames so big hits land with weight.
-public class GameFeel : MonoBehaviour
+public class GameFeel : Singleton<GameFeel>
 {
     [SerializeField] private float maxShake = 0.35f;
     [SerializeField] private float traumaDecay = 2.5f;
     [SerializeField] private float shakeFrequency = 30.0f;
     [SerializeField] private float pixelsPerUnit = 17.0f;
-    private static GameFeel instance;
     private Vector3 restPosition;
     private float trauma;
     private float freezeUntil;
@@ -20,30 +19,31 @@ public class GameFeel : MonoBehaviour
     // freeze: seconds of real time to hold the game still.
     public static void Impact(float shake, float freeze = 0.0f)
     {
-        if (instance == null)
+        if (Instance == null)
         {
             return;
         }
-        instance.trauma = Mathf.Clamp01(instance.trauma + shake);
+        Instance.trauma = Mathf.Clamp01(Instance.trauma + shake);
         if (freeze > 0.0f)
         {
-            instance.Freeze(freeze);
+            Instance.Freeze(freeze);
         }
     }
 
-    private void Awake()
+    protected override void Awake()
     {
-        instance = this;
+        base.Awake();
         restPosition = transform.localPosition;
     }
 
-    private void OnDestroy()
+    protected override void OnDestroy()
     {
-        if (instance == this)
+        if (Instance == this)
         {
-            instance = null;
+            // Never leave the game frozen if the scene unloads mid hit-stop.
             Time.timeScale = 1.0f;
         }
+        base.OnDestroy();
     }
 
     private void Freeze(float duration)

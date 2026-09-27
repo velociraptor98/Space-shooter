@@ -13,7 +13,9 @@ public class Enemy : MonoBehaviour
     [SerializeField] private float flashTime = 0.05f;
     [SerializeField] private float deathShake = 0.3f;
     [SerializeField] private float deathFreeze = 0.04f;
-    [SerializeField] private float deathAnimationLength = 2.8f;
+    // The shared explosion, sized to the ship.
+    [SerializeField] private GameObject deathExplosion;
+    [SerializeField] private float explosionScale = 1.0f;
     private int health;
     private bool isDestroyed;
     private SpriteRenderer body;
@@ -35,7 +37,7 @@ public class Enemy : MonoBehaviour
         }
         if (other.CompareTag("Bullet"))
         {
-            Destroy(other.gameObject);
+            PoolManager.Despawn(other.gameObject);
             TakeDamage(1);
         }
         else if (other.CompareTag("Player"))
@@ -49,12 +51,13 @@ public class Enemy : MonoBehaviour
         }
     }
 
-    public void TakeDamage(int amount)
+    // byPlayer: whether the player gets the score if this finishes the ship off (not for asteroid hits).
+    public void TakeDamage(int amount, bool byPlayer = true)
     {
         health -= amount;
         if (health <= 0)
         {
-            Die(true);
+            Die(byPlayer);
             return;
         }
         if (flashMaterial)
@@ -89,19 +92,29 @@ public class Enemy : MonoBehaviour
         {
             emitter.enabled = false;
         }
-        Destroy(GetComponent<Collider2D>());
+        // Leave the exhaust trails behind to fade out on their own rather than vanishing with the ship.
         foreach (ParticleSystem exhaust in GetComponentsInChildren<ParticleSystem>())
         {
             exhaust.Stop(true, ParticleSystemStopBehavior.StopEmitting);
+            exhaust.transform.SetParent(null, true);
+            Destroy(exhaust.gameObject, exhaust.main.startLifetime.constantMax);
         }
 
-        GetComponent<Animator>().SetTrigger("OnEnemyDeath");
-        GetComponent<AudioSource>().Play();
+        AudioSource source = GetComponent<AudioSource>();
+        if (source)
+        {
+            SoundEffects.Play(source.clip, source.volume);
+        }
+        if (deathExplosion)
+        {
+            GameObject explosion = PoolManager.Spawn(deathExplosion, transform.position, Quaternion.identity);
+            explosion.transform.localScale *= explosionScale;
+        }
         if (hitSparks)
         {
-            Instantiate(hitSparks, transform.position, Quaternion.identity);
+            PoolManager.Spawn(hitSparks, transform.position, Quaternion.identity);
         }
         GameFeel.Impact(deathShake, deathFreeze);
-        Destroy(gameObject, deathAnimationLength);
+        Destroy(gameObject);
     }
 }

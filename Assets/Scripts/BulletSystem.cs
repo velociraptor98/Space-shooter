@@ -11,7 +11,7 @@ public enum BulletKind
 // Runs every enemy bullet in one place. Bullets are pooled sprites moved in a single loop and tested
 // against the player's small hitbox by distance, which stays cheap with hundreds on screen and gives
 // the precise, circle-vs-circle hits a bullet hell needs.
-public class BulletSystem : MonoBehaviour
+public class BulletSystem : Singleton<BulletSystem>
 {
     [System.Serializable]
     private struct BulletStyle
@@ -41,46 +41,37 @@ public class BulletSystem : MonoBehaviour
     [SerializeField] private int sortingOrder = 4;
     [SerializeField] private float offscreenMargin = 1.0f;
     [SerializeField] private GameObject clearSparks;
-    private static BulletSystem instance;
     private readonly List<Bullet> active = new List<Bullet>();
     private readonly Stack<Bullet> pool = new Stack<Bullet>();
     private Rect bounds;
 
-    public static int ActiveCount => instance ? instance.active.Count : 0;
+    public static int ActiveCount => Instance ? Instance.active.Count : 0;
 
     // velocity: world units per second. acceleration: speed change per second along the heading.
     // turnRate: degrees per second the heading curves by (for sweeping, spiralling streams).
     public static void Fire(BulletKind kind, Vector2 position, Vector2 velocity, float acceleration = 0.0f, float turnRate = 0.0f)
     {
-        if (instance)
+        if (Instance)
         {
-            instance.Spawn(kind, position, velocity, acceleration, turnRate);
+            Instance.Spawn(kind, position, velocity, acceleration, turnRate);
         }
     }
 
     // Removes every bullet on screen - used as a mercy clear when the player is hit.
     public static void Clear()
     {
-        if (instance)
+        if (Instance)
         {
-            instance.ClearAll();
+            Instance.ClearAll();
         }
     }
 
-    private void Awake()
+    protected override void Awake()
     {
-        instance = this;
+        base.Awake();
         for (int i = 0; i < prewarm; ++i)
         {
             pool.Push(CreateBullet());
-        }
-    }
-
-    private void OnDestroy()
-    {
-        if (instance == this)
-        {
-            instance = null;
         }
     }
 
@@ -136,7 +127,7 @@ public class BulletSystem : MonoBehaviour
             bullet.position += bullet.velocity * dt;
             bullet.transform.SetPositionAndRotation(bullet.position, Rotation(bullet));
 
-            if (!bounds.Contains(bullet.position))
+            if (!bounds.Contains(bullet.position) || HitsAsteroid(bullet))
             {
                 Recycle(i);
                 continue;
@@ -153,6 +144,21 @@ public class BulletSystem : MonoBehaviour
                 }
             }
         }
+    }
+
+    // Asteroids soak up enemy fire, so they double as cover.
+    private static bool HitsAsteroid(Bullet bullet)
+    {
+        IReadOnlyList<Asteroid> asteroids = Asteroid.Active;
+        for (int i = 0; i < asteroids.Count; ++i)
+        {
+            float reach = asteroids[i].Radius + bullet.radius;
+            if ((bullet.position - (Vector2)asteroids[i].transform.position).sqrMagnitude <= reach * reach)
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static Quaternion Rotation(Bullet bullet)
@@ -181,7 +187,7 @@ public class BulletSystem : MonoBehaviour
         {
             if (clearSparks && i % 4 == 0)
             {
-                Instantiate(clearSparks, active[i].position, Quaternion.identity);
+                PoolManager.Spawn(clearSparks, active[i].position, Quaternion.identity);
             }
             Recycle(i);
         }

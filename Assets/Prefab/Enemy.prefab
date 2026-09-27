@@ -27,7 +27,7 @@ Transform:
   m_GameObject: {fileID: 1240920621384074486}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.42, y: 1.45, z: 0}
+  m_LocalPosition: {x: -0.45, y: 0.85, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -2311,10 +2311,10 @@ GameObject:
   - component: {fileID: 4644778376679384900}
   - component: {fileID: 4475145111852749286}
   - component: {fileID: 6393691818120993949}
-  - component: {fileID: 120356502}
   - component: {fileID: 3203662744183307550}
   - component: {fileID: 4989893161662866219}
   - component: {fileID: 3817911151951691584}
+  - component: {fileID: 5742714376199408574}
   m_Layer: 0
   m_Name: Enemy
   m_TagString: Enemy
@@ -2360,7 +2360,9 @@ MonoBehaviour:
   swoopMaxAngle: 75
   diveHoverTime: 0.8
   diveSpeedMultiplier: 1.8
-  holdHeightRange: {x: 3.5, y: 5}
+  holdDepthRange: {x: 7, y: 9}
+  hoverDepthRange: {x: 6, y: 10}
+  swoopDepthRange: {x: 6, y: 10}
   holdDuration: 7
   maxBankAngle: 35
   bankSmoothing: 8
@@ -2400,17 +2402,17 @@ BoxCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: -0.05642414, y: 0.078053474}
+  m_Offset: {x: 0, y: 0}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 5.1764708, y: 5.1764708}
+    oldSize: {x: 1.7058823, y: 1.7058823}
     newSize: {x: 5.12, y: 5.12}
     adaptiveTilingThreshold: 0.5
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 1.9018555, y: 2.7171898}
+  m_Size: {x: 1.3647059, y: 1.3647059}
   m_EdgeRadius: 0
 --- !u!50 &4475145111852749286
 Rigidbody2D:
@@ -2488,7 +2490,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 1
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 21300000, guid: 3154912113cbb4a498df6f571c74e18c, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 5fadfa69bb5144de0a911afa679ff597, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -2499,28 +2501,6 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
   m_BlendShapeWeights: []
---- !u!95 &120356502
-Animator:
-  serializedVersion: 7
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2442539865020007080}
-  m_Enabled: 1
-  m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: 591c6181bbe9ecb4eaf427639d14f641, type: 2}
-  m_CullingMode: 0
-  m_UpdateMode: 0
-  m_ApplyRootMotion: 0
-  m_LinearVelocityBlending: 0
-  m_StabilizeFeet: 0
-  m_AnimatePhysics: 0
-  m_WarningMessage: 
-  m_HasTransformHierarchy: 1
-  m_AllowConstantClipSamplingOptimization: 1
-  m_KeepAnimatorStateOnDisable: 0
-  m_WriteDefaultValuesOnDisable: 0
 --- !u!82 &3203662744183307550
 AudioSource:
   m_ObjectHideFlags: 0
@@ -2637,7 +2617,8 @@ MonoBehaviour:
   flashTime: 0.05
   deathShake: 0.3
   deathFreeze: 0.04
-  deathAnimationLength: 2.8
+  deathExplosion: {fileID: 2986179760599114004, guid: c90c821de56a8c743af98ed2b7cf116d, type: 3}
+  explosionScale: 0.9
 --- !u!114 &3817911151951691584
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2662,7 +2643,23 @@ MonoBehaviour:
   spinSpeed: 0
   bulletTurnRate: 0
   firstVolleyDelay: 0.4
-  muzzleOffset: {x: 0, y: -0.6}
+  muzzleOffset: {x: 0, y: 0}
+--- !u!114 &5742714376199408574
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2442539865020007080}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b16627cd9beda4e6bbd0d70e7cfca0e6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SpriteLoop
+  frames:
+  - {fileID: 21300000, guid: 5fadfa69bb5144de0a911afa679ff597, type: 3}
+  - {fileID: 21300000, guid: 316274cc3b0684eea91236ea2e573dd1, type: 3}
+  framesPerSecond: 4
 --- !u!1 &4448134202013488616
 GameObject:
   m_ObjectHideFlags: 0
@@ -2690,7 +2687,7 @@ Transform:
   m_GameObject: {fileID: 4448134202013488616}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.42, y: 1.45, z: 0}
+  m_LocalPosition: {x: 0.45, y: 0.85, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

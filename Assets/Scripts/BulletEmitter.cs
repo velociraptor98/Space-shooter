@@ -24,7 +24,7 @@ public class BulletEmitter : MonoBehaviour
     // Curves each bullet as it flies (degrees per second), for sweeping spiral arms.
     [SerializeField] private float bulletTurnRate = 0.0f;
     [SerializeField] private float firstVolleyDelay = 0.6f;
-    // Where bullets leave the ship, relative to its centre.
+    // Where bullets leave the ship, relative to its centre in its own space (the sprite faces down).
     [SerializeField] private Vector2 muzzleOffset = new Vector2(0.0f, -0.8f);
     private float nextShot;
     private int shotsLeft;
@@ -44,7 +44,7 @@ public class BulletEmitter : MonoBehaviour
             return;
         }
 
-        Vector2 origin = (Vector2)transform.position + muzzleOffset;
+        Vector2 origin = transform.position + transform.rotation * (Vector3)muzzleOffset;
         switch (pattern)
         {
             case FirePattern.Aimed:

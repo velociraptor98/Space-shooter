@@ -58,18 +58,11 @@ FIRE_BANDS = [0.30, 0.47, 0.64, 0.82]
 # fire: recolour flames with a flame ramp (FIRE unless `flame` says otherwise) - "all" pixels, or only
 #       "bright" ones (explosions over a ship).
 # levels_from: only measure the brightness range on matching frames (the intact ship, not its explosion).
-# out_dir: write into this Sprites/ subfolder instead of over the originals (for recoloured variants).
+# out_dir: write into this Sprites/ subfolder instead of over the originals.
 GROUPS = [
     dict(name="player", glob="Player_Turn_*/*.png", scale=0.5, colors=HULL + ["sky", "orange"], alpha="solid", outline=True, flatten=True),
     dict(name="enemy", glob="Enemy_Explode_Sequence/*.png", scale=1.0, colors=["ink", "plum", "steel", "slate", "silver", "red"],
          alpha="solid", outline=True, flatten=True, fire="bright", levels_from="*_00000.png"),
-    # Enemy variants: the same airframe re-coloured and re-sized so each type reads at a glance.
-    dict(name="enemy_scout", glob="Enemy_Explode_Sequence/*.png", out_dir="Enemy_Scout_Sequence", scale=0.75,
-         colors=["ink", "navy", "teal", "sky", "cyan"], alpha="solid", outline=True, flatten=True, fire="bright",
-         levels_from="*_00000.png"),
-    dict(name="enemy_heavy", glob="Enemy_Explode_Sequence/*.png", out_dir="Enemy_Heavy_Sequence", scale=1.35,
-         colors=["ink", "plum", "red", "silver"], alpha="solid", outline=True, flatten=True, fire="bright",
-         levels_from="*_00000.png"),
     dict(name="explosion", glob="Explosion/*.png", scale=1.0, colors=FIRE, alpha="solid", flatten=True, fire="all"),
     dict(name="engine_fire", glob="Player_Hurt/*.png", scale=0.5, colors=["steel", "slate", "silver"], alpha="solid", fire="bright"),
     dict(name="thruster", glob="Thruster/*.png", scale=0.5, colors=COOL_FLAME, alpha="solid", fire="all", flame=COOL_FLAME),

@@ -7,7 +7,6 @@ public class Movement : MonoBehaviour
 {
     [SerializeField] private float playerSpeed = 20.0f;
     [SerializeField] private GameObject projectile;
-    [SerializeField] private GameObject tripleProjectile;
     [SerializeField] private float fireRate = 0.2f;
     [SerializeField] private int life = 3;
     [SerializeField]private int score = 0;
@@ -21,11 +20,16 @@ public class Movement : MonoBehaviour
     [SerializeField] private AudioSource source;
     [SerializeField] private AudioClip laserclip;
     [SerializeField] private AudioClip powerclip;
-    // How quickly the ship reaches (and sheds) full speed, in units per second squared.
-    [SerializeField] private float acceleration = 150.0f;
-    // Sprites from level flight (index 0) to a full bank, used as the ship moves sideways.
-    [SerializeField] private Sprite[] bankLeftFrames;
-    [SerializeField] private Sprite[] bankRightFrames;
+    // How quickly the ship's speed follows the stick: higher is snappier. Speed eases in and out
+    // exponentially, so starts and stops glide rather than lurch.
+    [SerializeField] private float responsiveness = 12.0f;
+    // The ship's sprite, on a child that stays upright and swaps between pre-rotated frames instead of
+    // being rotated itself (rotating pixel art on the fly makes its pixels crawl).
+    [SerializeField] private SpriteRenderer body;
+    // Frame i faces i steps anticlockwise from straight up, evenly round the circle.
+    [SerializeField] private Sprite[] rotationFrames;
+    // Children that look the same at any angle (shield, hitbox) and so are also kept upright.
+    [SerializeField] private Transform[] keepUpright;
     [SerializeField] private GameObject hitSparks;
     // The only part of the ship bullets can hit, in world units. Far smaller than the sprite, as in any bullet hell.
     [SerializeField] private float hitboxRadius = 0.1f;
@@ -37,21 +41,57 @@ public class Movement : MonoBehaviour
     [SerializeField] private float blinkInterval = 0.08f;
     // How far inside the screen edge the ship's centre is kept.
     [SerializeField] private Vector2 screenMargin = new Vector2(0.7f, 0.9f);
+    // Roughly how long the ship takes to swing round to its aim point. Short, so aiming stays direct,
+    // but eased so small mouse movements don't jitter the ship.
+    [SerializeField] private float turnSmoothTime = 0.05f;
+    // Where shots leave the ship, ahead of its centre along its facing.
+    [SerializeField] private float noseOffset = 0.9f;
+    // Angle between the three shots of the Triple Shot power-up.
+    [SerializeField] private float tripleSpread = 12.0f;
+    // Crosshair drawn at the aim point, replacing the mouse cursor during play.
+    [SerializeField] private Transform reticle;
+    // With a gamepad the crosshair floats this far ahead of the ship, along the right stick.
+    [SerializeField] private float gamepadReticleDistance = 4.0f;
+    // Barrel roll: a quick dodge in the direction of movement that bullets pass straight through.
+    [SerializeField] private float rollDuration = 0.3f;
+    // Speed at the start of the roll's dash, easing back to normal speed by its end.
+    [SerializeField] private float rollSpeed = 48.0f;
+    [SerializeField] private float rollCooldown = 0.6f;
+    [SerializeField] private int rollAfterimages = 3;
+    [SerializeField] private GameObject afterimagePrefab;
+    [SerializeField] private Color afterimageTint = new Color(0.45f, 0.94f, 0.97f, 0.55f);
+    // Tint while the ship's underside is showing, mid-roll.
+    [SerializeField] private Color undersideTint = new Color(0.62f, 0.68f, 0.8f, 1.0f);
     private UManager UIManager;
     private GameObject spawn;
     private InputAction moveAction;
     private InputAction fireAction;
     private InputAction focusAction;
-    private SpriteRenderer body;
+    private InputAction pointAction;
+    private InputAction aimAction;
+    private InputAction rollAction;
+    private Vector2 aimPoint;
+    private Vector2 lastPointer;
+    private bool aimingWithStick;
     private Vector2 velocity;
+    private float heading;
+    private float turnVelocity;
     private Rect playArea;
     private float invulnerableUntil;
     private bool controlsEnabled = true;
+    private float rollStartTime = -100.0f;
+    private Vector2 rollDirection;
+    private int afterimagesLeft;
 
     // The live player ship, or null once it has been destroyed.
     public static Movement Instance { get; private set; }
     public float HitboxRadius => hitboxRadius;
-    public bool IsVulnerable => controlsEnabled && Time.time >= invulnerableUntil;
+    public bool IsVulnerable => controlsEnabled && Time.time >= invulnerableUntil && !IsRolling;
+    // Where the ship is aiming, in world space.
+    public Vector2 AimPoint => aimPoint;
+    public bool IsRolling => Time.time < rollStartTime + rollDuration;
+    // 0 to 1 through the current roll.
+    private float RollProgress => Mathf.Clamp01((Time.time - rollStartTime) / rollDuration);
 
     private void Awake()
     {
@@ -67,6 +107,11 @@ public class Movement : MonoBehaviour
         {
             Instance = null;
         }
+        Cursor.visible = true;
+        if (reticle)
+        {
+            reticle.gameObject.SetActive(false);
+        }
     }
 
     // Start is called before the first frame update
@@ -78,7 +123,12 @@ public class Movement : MonoBehaviour
         moveAction = InputSystem.actions.FindAction("Player/Move", true);
         fireAction = InputSystem.actions.FindAction("Player/Fire", true);
         focusAction = InputSystem.actions.FindAction("Player/Focus", true);
-        body = GetComponent<SpriteRenderer>();
+        pointAction = InputSystem.actions.FindAction("Player/Point", true);
+        aimAction = InputSystem.actions.FindAction("Player/Aim", true);
+        rollAction = InputSystem.actions.FindAction("Player/Roll", true);
+        aimPoint = (Vector2)transform.position + Vector2.up * gamepadReticleDistance;
+        // The crosshair takes over from the system cursor while the ship is alive.
+        Cursor.visible = false;
     }
 
     // Update is called once per frame
@@ -93,9 +143,17 @@ public class Movement : MonoBehaviour
         {
             hitboxMarker.SetActive(focusing);
         }
+        if (rollAction.WasPressedThisFrame() && Time.time >= rollStartTime + rollDuration + rollCooldown)
+        {
+            StartRoll();
+        }
         Move(focusing);
+        Aim();
         Blink();
-        if (fireAction.IsPressed() && Time.time>timeToNextBullet)
+        LeaveAfterimages();
+
+        // No firing mid-roll: the dodge is a commitment.
+        if (!IsRolling && fireAction.IsPressed() && Time.time>timeToNextBullet)
         {
             Fire();
         }
@@ -122,28 +180,131 @@ public class Movement : MonoBehaviour
         controlsEnabled = true;
     }
 
+    // Dashes in the direction being steered (or rolls on the spot with no input), untouchable until it ends.
+    private void StartRoll()
+    {
+        rollStartTime = Time.time;
+        Vector2 input = moveAction.ReadValue<Vector2>();
+        rollDirection = input.sqrMagnitude > 0.01f ? input.normalized : Vector2.zero;
+        afterimagesLeft = rollAfterimages;
+    }
+
     private void Move(bool focusing)
     {
-        // Ease towards the input velocity rather than snapping to it, so starts, stops and turns glide.
         float speed = playerSpeed * (focusing ? focusSpeedMultiplier : 1.0f);
         Vector2 targetVelocity = moveAction.ReadValue<Vector2>() * speed;
-        velocity = Vector2.MoveTowards(velocity, targetVelocity, acceleration * Time.deltaTime);
+        if (IsRolling && rollDirection != Vector2.zero)
+        {
+            // Burst out at roll speed and ease back to normal speed by the end of the roll.
+            float eased = 1.0f - Mathf.Pow(1.0f - RollProgress, 2.0f);
+            velocity = rollDirection * Mathf.Lerp(rollSpeed, playerSpeed, eased);
+        }
+        else
+        {
+            // Frame-rate independent exponential ease towards the target velocity.
+            velocity = Vector2.Lerp(velocity, targetVelocity, 1.0f - Mathf.Exp(-responsiveness * Time.deltaTime));
+        }
         Vector2 position = (Vector2)transform.position + velocity * Time.deltaTime;
+        // Stop dead against the screen edge, so reversing away from it responds at once.
+        if (position.x < playArea.xMin || position.x > playArea.xMax)
+        {
+            velocity.x = 0.0f;
+        }
+        if (position.y < playArea.yMin || position.y > playArea.yMax)
+        {
+            velocity.y = 0.0f;
+        }
         position.x = Mathf.Clamp(position.x, playArea.xMin, playArea.xMax);
         position.y = Mathf.Clamp(position.y, playArea.yMin, playArea.yMax);
         transform.position = new Vector3(position.x, position.y, transform.position.z);
-        Bank();
     }
 
-    private void Bank()
+    // Turns the ship towards the aim point: the mouse pointer, or the right stick's direction on a gamepad.
+    // Whichever was used last wins, so either can be picked up at any time.
+    private void Aim()
     {
-        float bank = Mathf.Clamp(velocity.x / playerSpeed, -1.0f, 1.0f);
-        Sprite[] frames = bank < 0.0f ? bankLeftFrames : bankRightFrames;
-        if (frames == null || frames.Length == 0)
+        Vector2 stick = aimAction.ReadValue<Vector2>();
+        Vector2 pointer = pointAction.ReadValue<Vector2>();
+        if (stick.sqrMagnitude > 0.1f)
+        {
+            aimingWithStick = true;
+            aimPoint = (Vector2)transform.position + stick.normalized * gamepadReticleDistance;
+        }
+        else if (pointer != lastPointer || !aimingWithStick)
+        {
+            aimingWithStick = false;
+            aimPoint = Playfield.ScreenToWorld(pointer);
+        }
+        else
+        {
+            // Keep a gamepad crosshair at the same offset as the ship moves.
+            aimPoint += velocity * Time.deltaTime;
+        }
+        lastPointer = pointer;
+        // Keep the crosshair on screen even if the pointer strays into the borders or off the window.
+        Rect view = Playfield.View;
+        aimPoint = new Vector2(Mathf.Clamp(aimPoint.x, view.xMin, view.xMax), Mathf.Clamp(aimPoint.y, view.yMin, view.yMax));
+
+        Vector2 toAim = aimPoint - (Vector2)transform.position;
+        if (toAim.sqrMagnitude > 0.01f)
+        {
+            // The sprite faces up, so measure the heading from straight up.
+            float target = Mathf.Atan2(toAim.y, toAim.x) * Mathf.Rad2Deg - 90.0f;
+            heading = Mathf.SmoothDampAngle(heading, target, ref turnVelocity, turnSmoothTime);
+            transform.rotation = Quaternion.Euler(0.0f, 0.0f, heading);
+        }
+        if (reticle)
+        {
+            reticle.position = new Vector3(aimPoint.x, aimPoint.y, reticle.position.z);
+        }
+    }
+
+    // The ship itself rotates (so shots, engines and damage fires follow its aim), but its sprite stays
+    // upright and shows the pre-rotated frame nearest the current heading.
+    private void LateUpdate()
+    {
+        if (IsRolling && rotationFrames != null && rotationFrames.Length > 0)
+        {
+            // Mid-roll the sprite turns with the ship and is squashed across its width, flipping through
+            // edge-on to its darker underside and back - a full spin about its length. It's only for a
+            // moment and moving fast, so rotating it directly doesn't show the pixel crawl.
+            float spin = Mathf.Cos(RollProgress * Mathf.PI * 2.0f);
+            body.sprite = rotationFrames[0];
+            body.transform.localRotation = Quaternion.identity;
+            body.transform.localScale = new Vector3(spin, 1.0f, 1.0f);
+            body.color = spin < 0.0f ? undersideTint : Color.white;
+        }
+        else
+        {
+            if (rotationFrames != null && rotationFrames.Length > 0)
+            {
+                float step = 360.0f / rotationFrames.Length;
+                int frame = Mathf.RoundToInt(Mathf.Repeat(transform.eulerAngles.z, 360.0f) / step) % rotationFrames.Length;
+                body.sprite = rotationFrames[frame];
+            }
+            body.transform.rotation = Quaternion.identity;
+            body.transform.localScale = Vector3.one;
+            body.color = Color.white;
+        }
+        foreach (Transform child in keepUpright)
+        {
+            child.rotation = Quaternion.identity;
+        }
+    }
+
+    // Drops fading copies of the ship at even points through a roll, streaking its path.
+    private void LeaveAfterimages()
+    {
+        if (afterimagesLeft <= 0 || !IsRolling)
         {
             return;
         }
-        body.sprite = frames[Mathf.RoundToInt(Mathf.Abs(bank) * (frames.Length - 1))];
+        float due = 1.0f - afterimagesLeft / (float)(rollAfterimages + 1);
+        if (RollProgress >= due)
+        {
+            Afterimage.Spawn(afterimagePrefab, body, afterimageTint, 0.25f);
+            --afterimagesLeft;
+        }
     }
 
     // Flicker the ship while it can't be hit, the classic signal for recovery time.
@@ -153,24 +314,25 @@ public class Movement : MonoBehaviour
         body.enabled = !invulnerable || Mathf.FloorToInt(Time.time / blinkInterval) % 2 == 0;
     }
 
+    // Shots leave the nose along the ship's facing; Triple Shot fans them out either side.
     private void Fire()
-       {
-           if (projectile || tripleProjectile)
-           {
-               if (isTripleActive == false)
-               {
-                   timeToNextBullet = Time.time + fireRate;
-                   Instantiate(projectile, new Vector3(this.transform.position.x, transform.position.y + 0.4f, 0.0f), Quaternion.identity);
-               }
-               else if (isTripleActive == true)
-               {
-                   timeToNextBullet = Time.time + fireRate;
-                   Instantiate(tripleProjectile, new Vector3(this.transform.position.x-1.4f, transform.position.y + 0.4f, 0.0f), Quaternion.identity);
-               }
-           }
+    {
+        timeToNextBullet = Time.time + fireRate;
+        Vector3 nose = transform.position + transform.up * noseOffset;
+        if (isTripleActive)
+        {
+            for (int i = -1; i <= 1; ++i)
+            {
+                PoolManager.Spawn(projectile, nose, transform.rotation * Quaternion.Euler(0.0f, 0.0f, i * tripleSpread));
+            }
+        }
+        else
+        {
+            PoolManager.Spawn(projectile, nose, transform.rotation);
+        }
         source.clip = laserclip;
         source.Play();
-       }
+    }
 
     public void OnDamage()
     {
@@ -180,7 +342,7 @@ public class Movement : MonoBehaviour
         }
         if (hitSparks)
         {
-            Instantiate(hitSparks, transform.position, Quaternion.identity);
+            PoolManager.Spawn(hitSparks, transform.position, Quaternion.identity);
         }
         // Wipe the screen and grant a moment's grace, so one mistake doesn't cascade into several hits.
         BulletSystem.Clear();

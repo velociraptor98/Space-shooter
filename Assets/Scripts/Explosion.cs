@@ -1,11 +1,13 @@
-﻿using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
+// The shared explosion effect. Its Animator restarts the blast each time the object is switched on, so
+// PoolManager can reuse it; it returns itself to the pool once the animation has played out.
 public class Explosion : MonoBehaviour
 {
-    private void Start()
+    [SerializeField] private float lifetime = 2.7f;
+
+    private void OnEnable()
     {
-        Destroy(this.gameObject, 3.0f);
+        PoolManager.Despawn(gameObject, lifetime);
     }
 }

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Draws the hand-authored bullet-hell sprites (enemy bullets and the player's hitbox marker).
+"""Draws the hand-authored bullet-hell sprites: enemy bullets, the player's hitbox marker and aiming crosshair.
 
 Each sprite is a small pixel map using the shared Sweetie 16 palette from retro_sprites.py, so they
 sit in the same colour set as everything else. Enemy bullets use warm, bright colours with a dark-to-
@@ -14,7 +14,7 @@ from PIL import Image
 from retro_sprites import PALETTE, ROOT
 
 OUT_DIR = os.path.join(ROOT, "Assets/Sprites/Bullets")
-KEYS = {".": None, "r": "red", "o": "orange", "y": "yellow", "w": "white", "g": "green", "l": "lime"}
+KEYS = {".": None, "r": "red", "o": "orange", "y": "yellow", "w": "white", "g": "green", "l": "lime", "c": "cyan"}
 
 SPRITES = {
     # Gunship rings: big, slow, unmissable.
@@ -45,6 +45,18 @@ SPRITES = {
         "gwwg",
         "gllg",
         ".gg.",
+    ],
+    # The aiming reticle that replaces the mouse cursor in play.
+    "Crosshair": [
+        "cc.....cc",
+        "c.......c",
+        ".........",
+        ".........",
+        "....w....",
+        ".........",
+        ".........",
+        "c.......c",
+        "cc.....cc",
     ],
     # The player's true hitbox, shown while focusing.
     "Hitbox": [

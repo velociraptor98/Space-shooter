@@ -8,10 +8,6 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 120356502, guid: dee9cd4c1d1999b44b22fa3474008b17, type: 3}
-      propertyPath: m_Controller
-      value: 
-      objectReference: {fileID: 22100000, guid: 82ab505bcbc5d479f9b3cd003f476a00, type: 2}
     - target: {fileID: 952726980, guid: dee9cd4c1d1999b44b22fa3474008b17, type: 3}
       propertyPath: speed
       value: 4
@@ -22,15 +18,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2971444906834848831, guid: dee9cd4c1d1999b44b22fa3474008b17, type: 3}
       propertyPath: m_LocalScale.x
-      value: 1.35
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2971444906834848831, guid: dee9cd4c1d1999b44b22fa3474008b17, type: 3}
       propertyPath: m_LocalScale.y
-      value: 1.35
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2971444906834848831, guid: dee9cd4c1d1999b44b22fa3474008b17, type: 3}
       propertyPath: m_LocalScale.z
-      value: 1.35
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 2971444906834848831, guid: dee9cd4c1d1999b44b22fa3474008b17, type: 3}
       propertyPath: m_LocalPosition.x
@@ -102,7 +98,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3817911151951691584, guid: dee9cd4c1d1999b44b22fa3474008b17, type: 3}
       propertyPath: muzzleOffset.y
-      value: -0.3
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3817911151951691584, guid: dee9cd4c1d1999b44b22fa3474008b17, type: 3}
       propertyPath: volleyInterval
@@ -112,13 +108,37 @@ PrefabInstance:
       propertyPath: firstVolleyDelay
       value: 1.2
       objectReference: {fileID: 0}
+    - target: {fileID: 4504632667478673617, guid: dee9cd4c1d1999b44b22fa3474008b17, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4504632667478673617, guid: dee9cd4c1d1999b44b22fa3474008b17, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 1.25
+      objectReference: {fileID: 0}
+    - target: {fileID: 4505973792852848846, guid: dee9cd4c1d1999b44b22fa3474008b17, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4505973792852848846, guid: dee9cd4c1d1999b44b22fa3474008b17, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 1.25
+      objectReference: {fileID: 0}
+    - target: {fileID: 4644778376679384900, guid: dee9cd4c1d1999b44b22fa3474008b17, type: 3}
+      propertyPath: m_Size.x
+      value: 2.2117648
+      objectReference: {fileID: 0}
+    - target: {fileID: 4644778376679384900, guid: dee9cd4c1d1999b44b22fa3474008b17, type: 3}
+      propertyPath: m_Size.y
+      value: 2.0235295
+      objectReference: {fileID: 0}
     - target: {fileID: 4644778376679384900, guid: dee9cd4c1d1999b44b22fa3474008b17, type: 3}
       propertyPath: m_SpriteTilingProperty.oldSize.x
-      value: 5.141612
+      value: 2.764706
       objectReference: {fileID: 0}
     - target: {fileID: 4644778376679384900, guid: dee9cd4c1d1999b44b22fa3474008b17, type: 3}
       propertyPath: m_SpriteTilingProperty.oldSize.y
-      value: 5.141612
+      value: 2.5294118
       objectReference: {fileID: 0}
     - target: {fileID: 4989893161662866219, guid: dee9cd4c1d1999b44b22fa3474008b17, type: 3}
       propertyPath: maxHealth
@@ -136,10 +156,26 @@ PrefabInstance:
       propertyPath: deathFreeze
       value: 0.12
       objectReference: {fileID: 0}
+    - target: {fileID: 4989893161662866219, guid: dee9cd4c1d1999b44b22fa3474008b17, type: 3}
+      propertyPath: explosionScale
+      value: 1.6
+      objectReference: {fileID: 0}
+    - target: {fileID: 5742714376199408574, guid: dee9cd4c1d1999b44b22fa3474008b17, type: 3}
+      propertyPath: framesPerSecond
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 5742714376199408574, guid: dee9cd4c1d1999b44b22fa3474008b17, type: 3}
+      propertyPath: 'frames.Array.data[0]'
+      value: 
+      objectReference: {fileID: 21300000, guid: 9cf192c8eb7704d688bbd3d1b21bb693, type: 3}
+    - target: {fileID: 5742714376199408574, guid: dee9cd4c1d1999b44b22fa3474008b17, type: 3}
+      propertyPath: 'frames.Array.data[1]'
+      value: 
+      objectReference: {fileID: 21300000, guid: 66d061994a5c34144a854ce7e6b43643, type: 3}
     - target: {fileID: 6393691818120993949, guid: dee9cd4c1d1999b44b22fa3474008b17, type: 3}
       propertyPath: m_Sprite
       value: 
-      objectReference: {fileID: 21300000, guid: 2da5d6c1998ab4ceab84c112daa08467, type: 3}
+      objectReference: {fileID: 21300000, guid: 9cf192c8eb7704d688bbd3d1b21bb693, type: 3}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -177,4 +213,4 @@ MonoBehaviour:
   spinSpeed: 0
   bulletTurnRate: 0
   firstVolleyDelay: 2.5
-  muzzleOffset: {x: 0, y: -0.3}
+  muzzleOffset: {x: 0, y: 0}
