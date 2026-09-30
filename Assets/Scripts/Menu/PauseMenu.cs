@@ -15,7 +15,7 @@ public class PauseMenu : MonoBehaviour
     [SerializeField] private MenuPanel pausePanel;
     [SerializeField] private MenuPanel optionsPanel;
     [SerializeField] private GameObject backdrop;
-    [SerializeField] private int menuScene = 0;
+    [SerializeField] private string titleScene = "MainMenu";
     private InputAction pauseAction;
     private InputActionMap playerControls;
     private bool paused;
@@ -105,11 +105,11 @@ public class PauseMenu : MonoBehaviour
 
     public void Restart()
     {
-        fader.LoadScene(SceneManager.GetActiveScene().buildIndex);
+        fader.LoadScene(SceneManager.GetActiveScene().name);
     }
 
     public void MainMenu()
     {
-        fader.LoadScene(menuScene);
+        fader.LoadScene(titleScene);
     }
 }

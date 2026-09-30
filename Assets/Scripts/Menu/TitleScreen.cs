@@ -18,7 +18,7 @@ public class TitleScreen : MonoBehaviour
     [SerializeField] private GameObject quitButton;
     [SerializeField] private Text bestScore;
     [SerializeField] private AudioClip startClip;
-    [SerializeField] private int gameScene = 1;
+    [SerializeField] private string playScene = "Game";
     private IDisposable anyButton;
     private bool starting;
 
@@ -57,7 +57,7 @@ public class TitleScreen : MonoBehaviour
         starting = true;
         navigator.Play(startClip);
         navigator.CloseAll();
-        fader.LoadScene(gameScene);
+        fader.LoadScene(playScene);
     }
 
     public void OpenOptions()

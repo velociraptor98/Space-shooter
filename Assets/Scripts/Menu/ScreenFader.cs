@@ -17,22 +17,22 @@ public class ScreenFader : MonoBehaviour
         yield return Fade(1.0f, 0.0f);
     }
 
-    public void LoadScene(int buildIndex)
+    public void LoadScene(string sceneName)
     {
         if (!loading)
         {
-            StartCoroutine(FadeAndLoad(buildIndex));
+            StartCoroutine(FadeAndLoad(sceneName));
         }
     }
 
-    private IEnumerator FadeAndLoad(int buildIndex)
+    private IEnumerator FadeAndLoad(string sceneName)
     {
         loading = true;
         yield return Fade(cover.color.a, 1.0f);
         // Leaving from the pause menu must not carry the pause into the next scene.
         Time.timeScale = 1.0f;
         AudioListener.pause = false;
-        SceneManager.LoadScene(buildIndex);
+        SceneManager.LoadScene(sceneName);
     }
 
     private IEnumerator Fade(float from, float to)

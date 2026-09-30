@@ -15,7 +15,7 @@ public class GameOverMenu : MonoBehaviour
     [SerializeField] private Text best;
     [SerializeField] private GameObject newBest;
     [SerializeField] private float delay = 1.2f;
-    [SerializeField] private int menuScene = 0;
+    [SerializeField] private string titleScene = "MainMenu";
 
     private void Awake()
     {
@@ -40,11 +40,11 @@ public class GameOverMenu : MonoBehaviour
 
     public void Retry()
     {
-        fader.LoadScene(SceneManager.GetActiveScene().buildIndex);
+        fader.LoadScene(SceneManager.GetActiveScene().name);
     }
 
     public void MainMenu()
     {
-        fader.LoadScene(menuScene);
+        fader.LoadScene(titleScene);
     }
 }
