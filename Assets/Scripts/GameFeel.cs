@@ -70,7 +70,8 @@ public class GameFeel : Singleton<GameFeel>
     private void LateUpdate()
     {
         trauma = Mathf.Max(0.0f, trauma - traumaDecay * Time.unscaledDeltaTime);
-        float strength = trauma * trauma * maxShake;
+        // Players can turn the shake off in Options; hit-stop stays, as it's timing rather than motion.
+        float strength = GameSettings.ScreenShake ? trauma * trauma * maxShake : 0.0f;
         float t = Time.unscaledTime * shakeFrequency;
         Vector2 offset = new Vector2(Mathf.PerlinNoise(t, 0.3f) * 2.0f - 1.0f, Mathf.PerlinNoise(0.7f, t) * 2.0f - 1.0f) * strength;
         offset.x = Mathf.Round(offset.x * pixelsPerUnit) / pixelsPerUnit;

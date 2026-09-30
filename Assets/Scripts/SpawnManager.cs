@@ -1,14 +1,12 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Serialization;
 
+// Sends in the enemy waves, asteroids and power-ups for a run, until the player is dead.
 public class SpawnManager : MonoBehaviour
 {
     // Small, fast and fragile; fires aimed bursts.
     [SerializeField] private GameObject scout;
     // The standard ship; fires rings.
-    [FormerlySerializedAs("enemies")]
     [SerializeField] private GameObject gunship;
     // Big and tough; parks just inside its entry edge and fires spirals.
     [SerializeField] private GameObject heavy;
@@ -20,7 +18,7 @@ public class SpawnManager : MonoBehaviour
     [SerializeField] private float maxWaveGap = 4.0f;
     [SerializeField] private int rampWaves = 15;
     [SerializeField] private int heavyEvery = 5;
-    private bool stopSpawning = false;
+    private bool stopSpawning;
     private int wave;
 
     // How much more often waves come from the top than from each other edge.
@@ -39,14 +37,14 @@ public class SpawnManager : MonoBehaviour
     private static float MinX => Playfield.Left + 1.5f;
     private static float MaxX => Playfield.Right - 1.5f;
 
-    // Start is called before the first frame update
     public void StartSpawn()
     {
-        StartCoroutine(ObjectSpawn());
+        StartCoroutine(SpawnWaves());
         StartCoroutine(SpawnPowerUps());
         StartCoroutine(SpawnAsteroids());
     }
-    IEnumerator ObjectSpawn()
+
+    private IEnumerator SpawnWaves()
     {
         yield return new WaitForSeconds(0.5f);
         while (!stopSpawning)
@@ -184,9 +182,8 @@ public class SpawnManager : MonoBehaviour
         Vector2 focus = Movement.Instance ? (Vector2)Movement.Instance.transform.position : bounds.center;
         float along = Mathf.Clamp(Vector2.Dot(focus - bounds.center, sideways) + offset, -edgeHalf + 1.5f, edgeHalf - 1.5f);
         Vector2 position = bounds.center - forward * (inset + 1.5f) + sideways * along;
-        GameObject temp = Instantiate(prefab, position, Quaternion.identity);
-        temp.transform.parent = enemyContainer.transform;
-        temp.GetComponent<EnemyMovement>().Launch(pattern, direction, forward);
+        GameObject enemy = Instantiate(prefab, position, Quaternion.identity, enemyContainer.transform);
+        enemy.GetComponent<EnemyMovement>().Launch(pattern, direction, forward);
     }
 
     // Sends a rock in from a random edge, drifting across the arena on a line near the player.
@@ -217,15 +214,15 @@ public class SpawnManager : MonoBehaviour
         yield return new WaitForSeconds(2.5f);
         while (!stopSpawning)
         {
-            int powerChoice = Random.Range(0,3);
             // Drop within a screen's width of the player, so power-ups stay reachable in the wide arena.
             float halfView = Playfield.View.width * 0.5f;
             float nearX = Movement.Instance ? Movement.Instance.transform.position.x : Playfield.CenterX;
             float x = Mathf.Clamp(nearX + Random.Range(-halfView, halfView), MinX, MaxX);
-            Instantiate(powerups[powerChoice], new Vector3(x, SpawnY, 0.0f), Quaternion.identity);
+            Instantiate(powerups[Random.Range(0, powerups.Length)], new Vector3(x, SpawnY, 0.0f), Quaternion.identity);
             yield return new WaitForSeconds(7.0f);
         }
     }
+
     public void PlayerDead()
     {
         stopSpawning = true;

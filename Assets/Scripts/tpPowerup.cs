@@ -1,54 +1,39 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
+// A power-up drifting down the arena. PowerID picks what it grants: 0 triple shot, 1 speed, 2 shield.
 public class tpPowerup : MonoBehaviour
 {
-    // Start is called before the first frame update
     [SerializeField] private float speed = 3.0f;
-    [SerializeField] private float PowerID = 0;
-    void Start()
-    {
-        
-    }
+    [SerializeField] private int PowerID = 0;
 
-    // Update is called once per frame
-    void Update()
+    private void Update()
     {
-        Move();
-    }
-
-    private void Move()
-    {
-        transform.Translate(Vector3.down*speed*Time.deltaTime);
-        if (this.transform.position.y < Playfield.Bottom - 1.0f)
+        transform.Translate(Vector3.down * speed * Time.deltaTime);
+        if (transform.position.y < Playfield.Bottom - 1.0f)
         {
-            Destroy(this.gameObject);
+            Destroy(gameObject);
         }
     }
 
     private void OnTriggerEnter2D(Collider2D other)
     {
-        if (other.CompareTag("Player")==true)
+        Movement player = other.GetComponent<Movement>();
+        if (!player)
         {
-            GameObject player = GameObject.Find("Player");
-            if(player)
-            {
-                switch(PowerID)
-                {
-                    case 0:
-                        player.GetComponent<Movement>().SetActive(); ;
-                        break;
-                    case 1:
-                        player.GetComponent<Movement>().SetSpeedActive();
-                        break;
-                    case 2:
-                        player.GetComponent<Movement>().SetShieldActive();
-                        break;
-                }
-            }
-            Destroy(this.gameObject);
+            return;
         }
+        switch (PowerID)
+        {
+            case 0:
+                player.SetActive();
+                break;
+            case 1:
+                player.SetSpeedActive();
+                break;
+            case 2:
+                player.SetShieldActive();
+                break;
+        }
+        Destroy(gameObject);
     }
 }

@@ -1,5 +1,4 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -9,12 +8,6 @@ public class Movement : MonoBehaviour
     [SerializeField] private GameObject projectile;
     [SerializeField] private float fireRate = 0.2f;
     [SerializeField] private int life = 3;
-    [SerializeField]private int score = 0;
-    private float timeToNextBullet = -1.0f;
-    [SerializeField]
-    private bool isTripleActive = false;
-    [SerializeField] private bool isSpeedActive = false;
-    [SerializeField] private bool isShieldActive = false;
     [SerializeField] private GameObject shield;
     [SerializeField] private GameObject leftFire, rightFire;
     [SerializeField] private AudioSource source;
@@ -31,13 +24,16 @@ public class Movement : MonoBehaviour
     // Children that look the same at any angle (shield, hitbox) and so are also kept upright.
     [SerializeField] private Transform[] keepUpright;
     [SerializeField] private GameObject hitSparks;
-    // The only part of the ship bullets can hit, in world units. Far smaller than the sprite, as in any bullet hell.
-    [SerializeField] private float hitboxRadius = 0.1f;
+    // The part of the ship bullets can hit, in world units: its body, leaving the wing tips and prongs as a
+    // little leeway.
+    [SerializeField] private float hitboxRadius = 0.35f;
     // Shown while focusing so the player can thread gaps precisely.
     [SerializeField] private GameObject hitboxMarker;
     // Holding Focus slows the ship to this fraction of its speed.
     [SerializeField] private float focusSpeedMultiplier = 0.45f;
     [SerializeField] private float invulnerableTime = 2.0f;
+    // While invulnerable after a hit the ship flickers between its sprite and this solid white flash.
+    [SerializeField] private Material flashMaterial;
     [SerializeField] private float blinkInterval = 0.08f;
     // How far inside the screen edge the ship's centre is kept.
     [SerializeField] private Vector2 screenMargin = new Vector2(0.7f, 0.9f);
@@ -62,8 +58,19 @@ public class Movement : MonoBehaviour
     [SerializeField] private Color afterimageTint = new Color(0.45f, 0.94f, 0.97f, 0.55f);
     // Tint while the ship's underside is showing, mid-roll.
     [SerializeField] private Color undersideTint = new Color(0.62f, 0.68f, 0.8f, 1.0f);
-    private UManager UIManager;
-    private GameObject spawn;
+    // Feedback for rolling through something that would have hit: a "DODGE!" callout, a bright echo of the
+    // ship where it was, a chime and a split-second hit-stop.
+    [SerializeField] private GameObject dodgePopup;
+    [SerializeField] private Vector2 dodgePopupOffset = new Vector2(0.0f, 1.2f);
+    [SerializeField] private Color dodgeTint = new Color(0.45f, 0.94f, 0.97f, 0.9f);
+    [SerializeField] private AudioClip dodgeClip;
+    [SerializeField] private float dodgeFreeze = 0.04f;
+    private int score;
+    private float timeToNextBullet = -1.0f;
+    private bool isTripleActive;
+    private bool isShieldActive;
+    private UManager uiManager;
+    private SpawnManager spawnManager;
     private InputAction moveAction;
     private InputAction fireAction;
     private InputAction focusAction;
@@ -82,6 +89,8 @@ public class Movement : MonoBehaviour
     private float rollStartTime = -100.0f;
     private Vector2 rollDirection;
     private int afterimagesLeft;
+    private bool dodgedThisRoll;
+    private Material normalMaterial;
 
     // The live player ship, or null once it has been destroyed.
     public static Movement Instance { get; private set; }
@@ -96,6 +105,7 @@ public class Movement : MonoBehaviour
     private void Awake()
     {
         Instance = this;
+        normalMaterial = body.sharedMaterial;
         Rect view = Playfield.Bounds;
         playArea = new Rect(view.xMin + screenMargin.x, view.yMin + screenMargin.y,
                             view.width - screenMargin.x * 2.0f, view.height - screenMargin.y * 2.0f);
@@ -114,12 +124,11 @@ public class Movement : MonoBehaviour
         }
     }
 
-    // Start is called before the first frame update
-    void Start()
+    private void Start()
     {
-        spawn = GameObject.Find("SpawnManager");
+        spawnManager = FindAnyObjectByType<SpawnManager>();
         shield.SetActive(false);
-        UIManager = GameObject.FindGameObjectWithTag("UI").GetComponent<UManager>();
+        uiManager = FindAnyObjectByType<UManager>();
         moveAction = InputSystem.actions.FindAction("Player/Move", true);
         fireAction = InputSystem.actions.FindAction("Player/Fire", true);
         focusAction = InputSystem.actions.FindAction("Player/Focus", true);
@@ -131,8 +140,7 @@ public class Movement : MonoBehaviour
         Cursor.visible = false;
     }
 
-    // Update is called once per frame
-    void Update()
+    private void Update()
     {
         if (!controlsEnabled)
         {
@@ -149,11 +157,10 @@ public class Movement : MonoBehaviour
         }
         Move(focusing);
         Aim();
-        Blink();
         LeaveAfterimages();
 
         // No firing mid-roll: the dodge is a commitment.
-        if (!IsRolling && fireAction.IsPressed() && Time.time>timeToNextBullet)
+        if (!IsRolling && fireAction.IsPressed() && Time.time > timeToNextBullet)
         {
             Fire();
         }
@@ -187,6 +194,27 @@ public class Movement : MonoBehaviour
         Vector2 input = moveAction.ReadValue<Vector2>();
         rollDirection = input.sqrMagnitude > 0.01f ? input.normalized : Vector2.zero;
         afterimagesLeft = rollAfterimages;
+        dodgedThisRoll = false;
+    }
+
+    // Called when something that would have hit the ship passes through it mid-roll. Celebrated once per roll.
+    public void OnDodge()
+    {
+        if (!IsRolling || dodgedThisRoll)
+        {
+            return;
+        }
+        dodgedThisRoll = true;
+        if (dodgePopup)
+        {
+            PoolManager.Spawn(dodgePopup, transform.position + (Vector3)dodgePopupOffset, Quaternion.identity);
+        }
+        if (afterimagePrefab)
+        {
+            Afterimage.Spawn(afterimagePrefab, body, dodgeTint, 0.45f);
+        }
+        SoundEffects.Play(dodgeClip);
+        GameFeel.Impact(0.0f, dodgeFreeze);
     }
 
     private void Move(bool focusing)
@@ -290,6 +318,7 @@ public class Movement : MonoBehaviour
         {
             child.rotation = Quaternion.identity;
         }
+        Flash();
     }
 
     // Drops fading copies of the ship at even points through a roll, streaking its path.
@@ -307,11 +336,13 @@ public class Movement : MonoBehaviour
         }
     }
 
-    // Flicker the ship while it can't be hit, the classic signal for recovery time.
-    private void Blink()
+    // Flicker the ship between white and its own colours while it can't be hit, the classic signal for
+    // recovery time. Starts on white, so the hit itself lands with a flash.
+    private void Flash()
     {
-        bool invulnerable = Time.time < invulnerableUntil;
-        body.enabled = !invulnerable || Mathf.FloorToInt(Time.time / blinkInterval) % 2 == 0;
+        float sinceHit = Time.time - (invulnerableUntil - invulnerableTime);
+        bool white = Time.time < invulnerableUntil && Mathf.FloorToInt(sinceHit / blinkInterval) % 2 == 0;
+        body.sharedMaterial = white && flashMaterial ? flashMaterial : normalMaterial;
     }
 
     // Shots leave the nose along the ship's facing; Triple Shot fans them out either side.
@@ -347,7 +378,7 @@ public class Movement : MonoBehaviour
         // Wipe the screen and grant a moment's grace, so one mistake doesn't cascade into several hits.
         BulletSystem.Clear();
         invulnerableUntil = Time.time + invulnerableTime;
-        if(isShieldActive)
+        if (isShieldActive)
         {
             isShieldActive = false;
             shield.SetActive(false);
@@ -357,68 +388,80 @@ public class Movement : MonoBehaviour
         --life;
         // Losing the ship hits hardest; any other hull damage still jolts the screen.
         GameFeel.Impact(life <= 0 ? 1.0f : 0.55f, life <= 0 ? 0.15f : 0.06f);
-        if(life == 2)
+        if (life == 2)
         {
             leftFire.SetActive(true);
         }
-        if(life == 1)
+        if (life == 1)
         {
             rightFire.SetActive(true);
         }
-        UIManager.UpdateLives(life);
+        uiManager.UpdateLives(life);
         if (life <= 0)
         {
-            spawn.GetComponent<SpawnManager>().PlayerDead();
-            Destroy(this.gameObject);
-            UIManager.GameOver();
+            // Out of control: the death sequence takes it from here, and destroys the ship when it blows.
+            controlsEnabled = false;
+            invulnerableUntil = 0.0f;
+            if (hitboxMarker)
+            {
+                hitboxMarker.SetActive(false);
+            }
+            if (reticle)
+            {
+                reticle.gameObject.SetActive(false);
+            }
+            spawnManager.PlayerDead();
+            uiManager.GameOver();
         }
     }
 
     public void SetActive()
     {
-        source.clip = powerclip;
-        source.Play();
-        this.isTripleActive = true;
+        PlayPowerUpSound();
+        isTripleActive = true;
         StartCoroutine(DisableTriple());
     }
+
     public void SetSpeedActive()
     {
-        source.clip = powerclip;
-        source.Play();
-        this.isSpeedActive = true;
+        PlayPowerUpSound();
         playerSpeed *= 1.5f;
         StartCoroutine(DisableSpeed());
     }
+
     public void SetShieldActive()
+    {
+        PlayPowerUpSound();
+        isShieldActive = true;
+        shield.SetActive(true);
+    }
+
+    private void PlayPowerUpSound()
     {
         source.clip = powerclip;
         source.Play();
-        this.isShieldActive = true;
-        shield.SetActive(true);
     }
+
     private IEnumerator DisableSpeed()
     {
         yield return new WaitForSeconds(8.0f);
-        isSpeedActive = false;
         playerSpeed /= 1.5f;
     }
+
     private IEnumerator DisableTriple()
     {
         yield return new WaitForSeconds(8.0f);
         isTripleActive = false;
     }
+
     public void AddScore(int points)
     {
         score += points;
-        UIManager.UpdateText();
-
+        uiManager.UpdateText();
     }
+
     public int GetScore()
     {
         return score;
-    }
-    public int GetLife()
-    {
-        return life;
     }
 }

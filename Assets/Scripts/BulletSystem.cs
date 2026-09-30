@@ -44,8 +44,9 @@ public class BulletSystem : Singleton<BulletSystem>
     private readonly List<Bullet> active = new List<Bullet>();
     private readonly Stack<Bullet> pool = new Stack<Bullet>();
     private Rect bounds;
-
-    public static int ActiveCount => Instance ? Instance.active.Count : 0;
+    // Where the player was last frame, so contact can be tested along the whole of this frame's movement.
+    private Vector2 lastPlayerPosition;
+    private bool hadPlayer;
 
     // velocity: world units per second. acceleration: speed change per second along the heading.
     // turnRate: degrees per second the heading curves by (for sweeping, spiralling streams).
@@ -109,7 +110,12 @@ public class BulletSystem : Singleton<BulletSystem>
 
         Movement player = Movement.Instance;
         bool canHit = player && player.IsVulnerable;
+        // Mid-roll, a bullet that would have hit sails through instead and counts as a dodge.
+        bool canDodge = player && player.IsRolling;
         Vector2 playerPosition = player ? (Vector2)player.transform.position : Vector2.zero;
+        Vector2 lastPlayer = hadPlayer ? lastPlayerPosition : playerPosition;
+        lastPlayerPosition = playerPosition;
+        hadPlayer = player;
         float dt = Time.deltaTime;
 
         for (int i = active.Count - 1; i >= 0; --i)
@@ -124,26 +130,42 @@ public class BulletSystem : Singleton<BulletSystem>
                 float speed = Mathf.Max(0.5f, bullet.velocity.magnitude + bullet.acceleration * dt);
                 bullet.velocity = bullet.velocity.normalized * speed;
             }
+            Vector2 previous = bullet.position;
             bullet.position += bullet.velocity * dt;
             bullet.transform.SetPositionAndRotation(bullet.position, Rotation(bullet));
 
-            if (!bounds.Contains(bullet.position) || HitsAsteroid(bullet))
+            if (HitsAsteroid(bullet))
             {
                 Recycle(i);
                 continue;
             }
-            if (canHit)
+            // Before the bounds check: in a slow frame a bullet can cross the ship and leave the arena at once.
+            if ((canHit || canDodge) && Touches(previous - lastPlayer, bullet.position - playerPosition, bullet.radius + player.HitboxRadius))
             {
-                float reach = bullet.radius + player.HitboxRadius;
-                if ((bullet.position - playerPosition).sqrMagnitude <= reach * reach)
+                if (canHit)
                 {
                     Recycle(i);
                     player.OnDamage();
                     // OnDamage clears the screen, so stop walking a list that has just been emptied.
                     return;
                 }
+                player.OnDodge();
+            }
+            if (!bounds.Contains(bullet.position))
+            {
+                Recycle(i);
             }
         }
+    }
+
+    // Whether a bullet came within `reach` of the player at any point this frame. Tested on the bullet's path
+    // relative to the player (from/to), so a fast ship or bullet, or a slow frame, can't skip past a hit.
+    private static bool Touches(Vector2 from, Vector2 to, float reach)
+    {
+        Vector2 path = to - from;
+        float length = path.sqrMagnitude;
+        float t = length > 0.0f ? Mathf.Clamp01(-Vector2.Dot(from, path) / length) : 0.0f;
+        return (from + path * t).sqrMagnitude <= reach * reach;
     }
 
     // Asteroids soak up enemy fire, so they double as cover.

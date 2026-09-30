@@ -92,6 +92,8 @@ public class PoolManager : Singleton<PoolManager>
         if (pooled == null)
         {
             pooled = Create(prefab);
+            // Out of the inactive staging parent, or activating it below would leave it inactive in the hierarchy.
+            pooled.transform.SetParent(transform, false);
         }
         Transform t = pooled.transform;
         t.SetPositionAndRotation(position, rotation);

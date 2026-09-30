@@ -48,6 +48,10 @@ public class Enemy : MonoBehaviour
                 player.OnDamage();
                 Die(false);
             }
+            else if (player && player.IsRolling)
+            {
+                player.OnDodge();
+            }
         }
     }
 
@@ -70,6 +74,32 @@ public class Enemy : MonoBehaviour
         }
     }
 
+    // Holds the ship where it is, guns silent (while the player's death plays out).
+    public void Freeze()
+    {
+        GetComponent<EnemyMovement>().enabled = false;
+        foreach (BulletEmitter emitter in GetComponents<BulletEmitter>())
+        {
+            emitter.enabled = false;
+        }
+        Rigidbody2D rigidbody = GetComponent<Rigidbody2D>();
+        if (rigidbody)
+        {
+            rigidbody.linearVelocity = Vector2.zero;
+            rigidbody.angularVelocity = 0.0f;
+        }
+    }
+
+    // Blows the ship up without scoring, caught in the player's final blast. sortingBoost lifts its explosion
+    // by that many sorting orders, to draw above the death sequence's blackout.
+    public void Detonate(int sortingBoost)
+    {
+        if (!isDestroyed)
+        {
+            Die(false, sortingBoost);
+        }
+    }
+
     private IEnumerator Flash()
     {
         body.sharedMaterial = flashMaterial;
@@ -78,7 +108,7 @@ public class Enemy : MonoBehaviour
         flashing = null;
     }
 
-    private void Die(bool killedByPlayer)
+    private void Die(bool killedByPlayer, int sortingBoost = 0)
     {
         isDestroyed = true;
         body.sharedMaterial = normalMaterial;
@@ -109,10 +139,11 @@ public class Enemy : MonoBehaviour
         {
             GameObject explosion = PoolManager.Spawn(deathExplosion, transform.position, Quaternion.identity);
             explosion.transform.localScale *= explosionScale;
+            DeathSequence.Lift(explosion, sortingBoost);
         }
         if (hitSparks)
         {
-            PoolManager.Spawn(hitSparks, transform.position, Quaternion.identity);
+            DeathSequence.Lift(PoolManager.Spawn(hitSparks, transform.position, Quaternion.identity), sortingBoost);
         }
         GameFeel.Impact(deathShake, deathFreeze);
         Destroy(gameObject);

@@ -58,12 +58,15 @@ SPRITES = {
         "c.......c",
         "cc.....cc",
     ],
-    # The player's true hitbox, shown while focusing.
+    # The player's true hitbox, shown while focusing: a ring the size of the hit area (0.35 units at the
+    # sprite's 8.5 pixels per unit), with its centre marked.
     "Hitbox": [
-        ".rr.",
-        "rwwr",
-        "rwwr",
-        ".rr.",
+        ".rrrr.",
+        "r....r",
+        "r.ww.r",
+        "r.ww.r",
+        "r....r",
+        ".rrrr.",
     ],
 }
 

@@ -62,19 +62,6 @@ public class EnemyMovement : MonoBehaviour
         transform.rotation = heading;
     }
 
-    public void Launch(FlightPattern flightPattern, float flightDirection)
-    {
-        Launch(flightPattern, flightDirection, Vector2.down);
-    }
-
-    private void Start()
-    {
-        if (pathTime == 0.0f)
-        {
-            ResetPath();
-        }
-    }
-
     private void Update()
     {
         pathTime += Time.deltaTime;

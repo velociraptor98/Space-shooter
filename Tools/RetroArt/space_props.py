@@ -13,11 +13,12 @@ import os
 import numpy as np
 from PIL import Image
 
-from retro_sprites import BAYER4, PALETTE, ROOT
+from retro_sprites import PALETTE, ROOT
 
 SPACE_DIR = os.path.join(ROOT, "Assets/Sprites/Space")
 ASTEROID_DIR = os.path.join(ROOT, "Assets/Sprites/Asteroids")
 LIGHT = np.array([-0.55, 0.55, 0.63])  # From the upper left, towards the viewer.
+BAYER4 = np.array([[0, 8, 2, 10], [12, 4, 14, 6], [3, 11, 1, 9], [15, 7, 13, 5]]) / 16.0 - 0.5
 
 
 def fbm(width, height, rng, base=4, octaves=5):

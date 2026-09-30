@@ -96,6 +96,10 @@ public class Asteroid : MonoBehaviour
                 // The rock shatters on the hull.
                 Break(false);
             }
+            else if (player && player.IsRolling)
+            {
+                player.OnDodge();
+            }
         }
         else if (other.CompareTag("Enemy"))
         {

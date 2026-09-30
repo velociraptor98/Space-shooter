@@ -1,39 +1,33 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
+// The in-game HUD: score, lives and centre-screen banners. Also hands the player's death to the DeathSequence.
 public class UManager : MonoBehaviour
 {
-    // Start is called before the first frame update
-    [SerializeField]
-    Text scoreText;
-    GameObject player;
-    [SerializeField]
-    private Image livesImage;
-    [SerializeField]
-    private Sprite[] sprites;
-    [SerializeField]
-    private Text GameOverText;
-    [SerializeField]
-    private Text Reset_Text;
+    [SerializeField] private Text scoreText;
+    [SerializeField] private Image livesImage;
+    // Indexed by lives remaining.
+    [SerializeField] private Sprite[] sprites;
+    [SerializeField] private DeathSequence deathSequence;
     // Centre-screen callouts such as "GET READY" and wave warnings.
-    [SerializeField]
-    private Text bannerText;
-    private GameObject GameManager;
+    [SerializeField] private Text bannerText;
+    private Movement player;
+    private GameManager gameManager;
     private Coroutine banner;
+
     private void Awake()
     {
         bannerText.enabled = false;
     }
+
     private void Start()
     {
-        GameManager = GameObject.Find("GameManager");
-        player = GameObject.FindGameObjectWithTag("Player");
-        GameOverText.enabled = false;
-        Reset_Text.enabled = false;
+        gameManager = FindAnyObjectByType<GameManager>();
+        player = FindAnyObjectByType<Movement>();
         UpdateText();
     }
+
     public void ShowBanner(string message, float duration)
     {
         if (banner != null)
@@ -42,6 +36,7 @@ public class UManager : MonoBehaviour
         }
         banner = StartCoroutine(Banner(message, duration));
     }
+
     private IEnumerator Banner(string message, float duration)
     {
         bannerText.text = message;
@@ -54,29 +49,20 @@ public class UManager : MonoBehaviour
         bannerText.enabled = false;
         banner = null;
     }
+
     public void UpdateText()
     {
-        scoreText.text = "Score: " + player.GetComponent<Movement>().GetScore();
+        scoreText.text = "Score: " + player.GetScore();
     }
+
     public void UpdateLives(int currentLives)
     {
         livesImage.sprite = sprites[currentLives];
     }
+
     public void GameOver()
     {
-        GameOverText.enabled = true;
-        Reset_Text.enabled = true;
-        GameManager.GetComponent<GameManager>().GameOver();
-        StartCoroutine(GameOverFlicker());
-    }
-     IEnumerator GameOverFlicker()
-    {
-        while(true)
-        {
-            GameOverText.enabled = false;
-            yield return new WaitForSeconds(0.5f);
-            GameOverText.enabled = true;
-            yield return new WaitForSeconds(0.5f);
-        }
+        gameManager.GameOver();
+        deathSequence.Play(player);
     }
 }

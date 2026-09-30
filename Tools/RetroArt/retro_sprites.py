@@ -30,10 +30,9 @@ import numpy as np
 from PIL import Image, ImageEnhance, ImageFilter
 
 SOURCE_COMMIT = "1a91cfc"
-RETRO_PPU = 17  # Matches the Pixel Perfect Camera: 480x270 reference resolution.
+RETRO_PPU = 17  # The Pixel Perfect Camera's pixels per unit.
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 SPRITES = "Assets/2D Galaxy Assets/Game/Sprites"
-BAYER4 = np.array([[0, 8, 2, 10], [12, 4, 14, 6], [3, 11, 1, 9], [15, 7, 13, 5]]) / 16.0 - 0.5
 
 # Sweetie 16 by GrafxKid (lospec.com/palette-list/sweetie-16). The cool navies, blues and teals set a
 # calm base; the warm reds, oranges and yellows are kept for fire, lasers and danger so the action pops.
@@ -47,25 +46,19 @@ OUTLINE = PALETTE["ink"]
 HULL = ["ink", "steel", "slate", "silver", "white"]
 # Flame ramps run from the cool outer edge to the white-hot core.
 FIRE = ["plum", "red", "orange", "yellow", "white"]
-COOL_FLAME = ["navy", "blue", "sky", "cyan", "white"]
 FIRE_BANDS = [0.30, 0.47, 0.64, 0.82]
 
 # scale: the object's x scale in game, so a texel lands on exactly one retro pixel.
 # ui_size: for UI images (drawn by the Canvas, not the world camera), the output size instead.
 # colors: the PALETTE entries this group may use.
-# alpha: "solid" = 1-bit, "translucent" = 0/50/100%, "opaque" = flattened onto the darkest colour.
+# alpha: "solid" = 1-bit, "translucent" = 0/50/100%.
 # flatten: majority-colour filter for busy, photographic art (rock, smoke) so it reads as flat shading.
-# fire: recolour flames with a flame ramp (FIRE unless `flame` says otherwise) - "all" pixels, or only
-#       "bright" ones (explosions over a ship).
-# levels_from: only measure the brightness range on matching frames (the intact ship, not its explosion).
-# out_dir: write into this Sprites/ subfolder instead of over the originals.
+# fire: recolour flames with the FIRE ramp - "all" pixels, or only "bright" ones (flames over a hull).
+# write: only save matching frames; the rest still set the group's brightness range.
 GROUPS = [
-    dict(name="player", glob="Player_Turn_*/*.png", scale=0.5, colors=HULL + ["sky", "orange"], alpha="solid", outline=True, flatten=True),
-    dict(name="enemy", glob="Enemy_Explode_Sequence/*.png", scale=1.0, colors=["ink", "plum", "steel", "slate", "silver", "red"],
-         alpha="solid", outline=True, flatten=True, fire="bright", levels_from="*_00000.png"),
+    dict(name="player", glob="Player_Turn_*/*.png", write="Player Turn Left0000.png", scale=0.5, colors=HULL + ["sky", "orange"], alpha="solid", outline=True, flatten=True),
     dict(name="explosion", glob="Explosion/*.png", scale=1.0, colors=FIRE, alpha="solid", flatten=True, fire="all"),
     dict(name="engine_fire", glob="Player_Hurt/*.png", scale=0.5, colors=["steel", "slate", "silver"], alpha="solid", fire="bright"),
-    dict(name="thruster", glob="Thruster/*.png", scale=0.5, colors=COOL_FLAME, alpha="solid", fire="all", flame=COOL_FLAME),
     dict(name="shield", glob="Player_Shield/*.png", scale=1.0, colors=["blue", "sky", "cyan", "white"], alpha="translucent"),
     dict(name="powerup_triple", glob="Power_Ups/Triple_Shot/*.png", scale=0.5, colors=HULL + ["green", "lime"],
          alpha="solid", outline=True, strip_label=True),
@@ -73,13 +66,8 @@ GROUPS = [
          alpha="solid", outline=True, strip_label=True),
     dict(name="powerup_shield", glob="Power_Ups/Shield/*.png", scale=0.5, colors=HULL + ["sky", "cyan"],
          alpha="solid", outline=True, strip_label=True),
-    dict(name="asteroid", glob="Asteroid.png", scale=1.0, colors=["ink", "steel", "slate", "silver"], alpha="solid", outline=True, flatten=True),
     dict(name="laser", glob="laser.png", scale=0.83, colors=["red", "orange", "yellow", "white"], alpha="solid"),
-    dict(name="background", glob="SpaceBG_Overlay.png", scale=2.02, colors=["ink", "navy", "steel", "teal", "plum", "blue", "slate"],
-         alpha="opaque", dither=True),
     dict(name="lives", glob="UI/Lives/*.png", ui_size=(64, 32), colors=HULL + ["sky", "orange"], alpha="solid"),
-    dict(name="title", glob="UI/MainMenu.png", ui_size=(192, 192),
-         colors=["ink", "navy", "blue", "sky", "cyan", "white", "steel", "slate", "silver", "orange"], alpha="solid", flatten=True),
 ]
 # The power-up art has its name printed underneath; at retro size it is an unreadable smear, so the
 # colour-coded pod carries the meaning instead. Rows at or below this (in source pixels) are dropped.
@@ -116,7 +104,7 @@ def brightness_levels(images):
     return np.percentile(luma, 2), max(np.percentile(luma, 98), np.percentile(luma, 2) + 1.0)
 
 
-def map_to_palette(rgb, colors, levels, dither):
+def map_to_palette(rgb, colors, levels):
     palette = np.array([PALETTE[c] for c in colors], dtype=float)
     target = to_ycc(palette)
     source = to_ycc(rgb.astype(float))
@@ -124,13 +112,6 @@ def map_to_palette(rgb, colors, levels, dither):
     ymin, ymax = target[:, 0].min(), target[:, 0].max()
     source[..., 0] = ymin + np.clip((source[..., 0] - low) / (high - low), 0.0, 1.0) * (ymax - ymin)
     source[..., 1:] *= 1.5  # The art is quite desaturated; let its accents find the accent colours.
-    if dither:
-        h, w = rgb.shape[:2]
-        threshold = np.tile(BAYER4, (h // 4 + 1, w // 4 + 1))[:h, :w]
-        # Fade the dither out towards black: dithered near-black reads as noise (and as a dotted band
-        # where tiles meet), while on the brighter nebulae it gives the classic 16-bit gradient.
-        strength = np.clip((source[..., 0] - ymin) / 40.0, 0.0, 1.0)
-        source[..., 0] += threshold * strength * 28.0
     # Brightness matters most for reading shapes, so weight it above hue.
     distances = (2.0 * (source[..., None, 0] - target[None, None, :, 0]) ** 2
                  + ((source[..., None, 1:] - target[None, None, :, 1:]) ** 2).sum(-1))
@@ -162,7 +143,7 @@ def distance_inside(solid):
     return distance
 
 
-def fire_colors(rgba, solid, flame):
+def fire_colors(rgba, solid):
     # Band mostly by relative depth into the shape so flames get concentric rings - hot core, cool
     # rim - even where the source art is blown out to flat white - with brightness adding variation.
     rgb = rgba[..., :3] / 255.0
@@ -170,7 +151,7 @@ def fire_colors(rgba, solid, flame):
     distance = distance_inside(solid)
     depth = distance / max(distance.max(), 1.0)
     score = 0.35 * luminance + 0.65 * depth
-    ramp = np.array([PALETTE[c] for c in flame], dtype=float)
+    ramp = np.array([PALETTE[c] for c in FIRE], dtype=float)
     return ramp[np.digitize(score, FIRE_BANDS)]
 
 
@@ -213,9 +194,7 @@ def add_outline(rgba):
     return rgba
 
 
-def target_path(group, rel):
-    if "out_dir" in group:
-        return f"{SPRITES}/{group['out_dir']}/{os.path.basename(rel)}"
+def target_path(rel):
     return rel if rel.endswith(".png") else os.path.splitext(rel)[0] + ".png"
 
 
@@ -238,25 +217,22 @@ def process_group(group, preview_dir):
         image = downscale(image, size)
         rgb = ImageEnhance.Contrast(ImageEnhance.Color(image.convert("RGB")).enhance(1.3)).enhance(1.3)
         image = Image.merge("RGBA", (*rgb.split(), image.getchannel("A")))
-        if group["alpha"] == "opaque":
-            flat = Image.new("RGBA", image.size, (*PALETTE[group["colors"][0]], 255))
-            flat.alpha_composite(image)
-            image = flat
         small.append(image)
 
-    levels = brightness_levels([im for rel, im in zip(rel_paths, small)
-                                if fnmatch.fnmatchcase(os.path.basename(rel), group.get("levels_from", "*"))])
+    levels = brightness_levels(small)
     for rel, image in zip(rel_paths, small):
+        if not written(group, rel):
+            continue
         rgba = np.asarray(image).astype(float)
         alpha = rgba[..., 3]
         if group["alpha"] == "translucent":
             alpha = np.select([alpha < 64, alpha < 176], [0, 128], 255)
         else:
             alpha = np.where(alpha < 128, 0, 255)
-        rgb = map_to_palette(rgba[..., :3], group["colors"], levels, group.get("dither", False))
+        rgb = map_to_palette(rgba[..., :3], group["colors"], levels)
         if group.get("fire"):
             flames = fire_mask(rgba, group["fire"])[..., None]
-            rgb = np.where(flames, fire_colors(rgba, alpha > 0, group.get("flame", FIRE)), rgb)
+            rgb = np.where(flames, fire_colors(rgba, alpha > 0), rgb)
         if group.get("flatten"):
             rgb = np.where((alpha > 0)[..., None], majority_filter(rgb), rgb)
         rgb = remove_strays(rgb, alpha > 0)
@@ -265,20 +241,24 @@ def process_group(group, preview_dir):
         if group.get("outline"):
             out = add_outline(out)
 
-        target = target_path(group, rel)
+        target = target_path(rel)
         if preview_dir:
             destination = os.path.join(preview_dir, os.path.relpath(target, SPRITES))
             os.makedirs(os.path.dirname(destination), exist_ok=True)
         else:
             destination = os.path.join(ROOT, target)
             os.makedirs(os.path.dirname(destination), exist_ok=True)
-            if "out_dir" not in group and target != rel and os.path.exists(os.path.join(ROOT, rel)):
+            if target != rel and os.path.exists(os.path.join(ROOT, rel)):
                 # Unity can't write .psd, so it becomes a .png that keeps the original's .meta (and
                 # so its GUID) and every animation that references it survives.
                 os.replace(os.path.join(ROOT, rel + ".meta"), os.path.join(ROOT, target + ".meta"))
                 os.remove(os.path.join(ROOT, rel))
         Image.fromarray(out, "RGBA").save(destination, optimize=True)
-    print(f"{group['name']:>15}: {len(rel_paths):3d} sprites, {len(group['colors'])} colours, {small[0].size[0]}x{small[0].size[1]}")
+    print(f"{group['name']:>15}: {sum(written(group, rel) for rel in rel_paths):3d} sprites, {len(group['colors'])} colours, {small[0].size[0]}x{small[0].size[1]}")
+
+
+def written(group, rel):
+    return fnmatch.fnmatchcase(os.path.basename(rel), group.get("write", "*"))
 
 
 def write_manifest():
@@ -286,8 +266,8 @@ def write_manifest():
     sprites = []
     for group in GROUPS:
         ppu = 0 if "ui_size" in group else round(RETRO_PPU * group["scale"], 2)
-        for rel in list_originals(group["glob"]):
-            sprites.append({"path": target_path(group, rel), "ppu": ppu})
+        for rel in filter(lambda rel: written(group, rel), list_originals(group["glob"])):
+            sprites.append({"path": target_path(rel), "ppu": ppu})
     with open(os.path.join(ROOT, "Tools/RetroArt/manifest.json"), "w") as f:
         json.dump({"retroPpu": RETRO_PPU, "sprites": sprites}, f, indent=1)
 
