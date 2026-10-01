@@ -52,7 +52,8 @@ public class UManager : MonoBehaviour
 
     public void UpdateText()
     {
-        scoreText.text = "Score: " + player.GetScore();
+        // The pixel font has capitals only; matches the game-over panel's "SCORE 000000".
+        scoreText.text = "SCORE " + player.GetScore().ToString("D6");
     }
 
     public void UpdateLives(int currentLives)
