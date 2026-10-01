@@ -7209,6 +7209,22 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 1035651568574537895, guid: 6f557d66ccdb94ed88b53a3b37a6f020, type: 3}
+      propertyPath: m_AnchorMax.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1035651568574537895, guid: 6f557d66ccdb94ed88b53a3b37a6f020, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1445051156125271347, guid: 6f557d66ccdb94ed88b53a3b37a6f020, type: 3}
+      propertyPath: m_AnchorMax.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1445051156125271347, guid: 6f557d66ccdb94ed88b53a3b37a6f020, type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4200829266227473897, guid: 6f557d66ccdb94ed88b53a3b37a6f020, type: 3}
       propertyPath: m_AnchorMax.x
       value: 0
@@ -7223,6 +7239,14 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4200829266227473897, guid: 6f557d66ccdb94ed88b53a3b37a6f020, type: 3}
       propertyPath: m_AnchorMin.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4200829266227473897, guid: 6f557d66ccdb94ed88b53a3b37a6f020, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4200829266227473897, guid: 6f557d66ccdb94ed88b53a3b37a6f020, type: 3}
+      propertyPath: m_AnchoredPosition.y
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6010470927579497035, guid: 6f557d66ccdb94ed88b53a3b37a6f020, type: 3}
@@ -7969,7 +7993,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.CanvasScaler
   m_UiScaleMode: 0
   m_ReferencePixelsPerUnit: 1
-  m_ScaleFactor: 2
+  m_ScaleFactor: 1
   m_ReferenceResolution: {x: 800, y: 600}
   m_ScreenMatchMode: 0
   m_MatchWidthOrHeight: 0
