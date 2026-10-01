@@ -14,22 +14,53 @@ public static class GameSettings
     // Raised whenever an option changes, so live objects (music, fullscreen) can follow it.
     public static event Action Changed;
 
+    // Read from PlayerPrefs once and kept here, as ScreenShake is checked every frame.
+    private static bool loaded;
+    private static int masterVolume;
+    private static int musicVolume;
+    private static bool screenShake;
+    private static int bestScore;
+
     public static int MasterVolume
     {
-        get => PlayerPrefs.GetInt(MasterKey, 8);
-        set => Set(MasterKey, Mathf.Clamp(value, 0, VolumeSteps));
+        get
+        {
+            Load();
+            return masterVolume;
+        }
+        set
+        {
+            masterVolume = Mathf.Clamp(value, 0, VolumeSteps);
+            Set(MasterKey, masterVolume);
+        }
     }
 
     public static int MusicVolume
     {
-        get => PlayerPrefs.GetInt(MusicKey, 7);
-        set => Set(MusicKey, Mathf.Clamp(value, 0, VolumeSteps));
+        get
+        {
+            Load();
+            return musicVolume;
+        }
+        set
+        {
+            musicVolume = Mathf.Clamp(value, 0, VolumeSteps);
+            Set(MusicKey, musicVolume);
+        }
     }
 
     public static bool ScreenShake
     {
-        get => PlayerPrefs.GetInt(ShakeKey, 1) == 1;
-        set => Set(ShakeKey, value ? 1 : 0);
+        get
+        {
+            Load();
+            return screenShake;
+        }
+        set
+        {
+            screenShake = value;
+            Set(ShakeKey, value ? 1 : 0);
+        }
     }
 
     public static bool Fullscreen
@@ -42,7 +73,14 @@ public static class GameSettings
         }
     }
 
-    public static int BestScore => PlayerPrefs.GetInt(BestKey, 0);
+    public static int BestScore
+    {
+        get
+        {
+            Load();
+            return bestScore;
+        }
+    }
 
     // Records a finished run's score, returning true if it's a new best.
     public static bool SubmitScore(int score)
@@ -51,6 +89,7 @@ public static class GameSettings
         {
             return false;
         }
+        bestScore = score;
         PlayerPrefs.SetInt(BestKey, score);
         PlayerPrefs.Save();
         return true;
@@ -65,6 +104,19 @@ public static class GameSettings
     private static void Apply()
     {
         AudioListener.volume = Fraction(MasterVolume);
+    }
+
+    private static void Load()
+    {
+        if (loaded)
+        {
+            return;
+        }
+        loaded = true;
+        masterVolume = PlayerPrefs.GetInt(MasterKey, 8);
+        musicVolume = PlayerPrefs.GetInt(MusicKey, 7);
+        screenShake = PlayerPrefs.GetInt(ShakeKey, 1) == 1;
+        bestScore = PlayerPrefs.GetInt(BestKey, 0);
     }
 
     private static void Set(string key, int value)

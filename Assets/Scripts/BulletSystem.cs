@@ -35,6 +35,12 @@ public class BulletSystem : Singleton<BulletSystem>
         public bool faceVelocity;
     }
 
+    private struct Rock
+    {
+        public Vector2 position;
+        public float radius;
+    }
+
     // Indexed by BulletKind.
     [SerializeField] private BulletStyle[] styles;
     [SerializeField] private int prewarm = 400;
@@ -43,6 +49,9 @@ public class BulletSystem : Singleton<BulletSystem>
     [SerializeField] private GameObject clearSparks;
     private readonly List<Bullet> active = new List<Bullet>();
     private readonly Stack<Bullet> pool = new Stack<Bullet>();
+    private readonly List<Rock> rocks = new List<Rock>();
+    private ParticleSystem clearSparkSystem;
+    private int sparksPerBurst;
     private Rect bounds;
     // Where the player was last frame, so contact can be tested along the whole of this frame's movement.
     private Vector2 lastPlayerPosition;
@@ -74,6 +83,30 @@ public class BulletSystem : Singleton<BulletSystem>
         {
             pool.Push(CreateBullet());
         }
+        if (clearSparks)
+        {
+            CreateClearSparks();
+        }
+    }
+
+    private void CreateClearSparks()
+    {
+        clearSparkSystem = Instantiate(clearSparks, transform).GetComponent<ParticleSystem>();
+        // Discard the burst it would play on waking, then keep it running with nothing emitting on its own.
+        clearSparkSystem.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+        ParticleSystem.MainModule main = clearSparkSystem.main;
+        main.loop = true;
+        main.stopAction = ParticleSystemStopAction.None;
+        // Sparks land all over the arena, including off screen, and must play out rather than wait to be seen.
+        main.cullingMode = ParticleSystemCullingMode.AlwaysSimulate;
+        main.maxParticles = Mathf.Max(main.maxParticles, 4000);
+        ParticleSystem.EmissionModule emission = clearSparkSystem.emission;
+        for (int i = 0; i < emission.burstCount; ++i)
+        {
+            sparksPerBurst += (int)emission.GetBurst(i).count.constantMax;
+        }
+        emission.enabled = false;
+        clearSparkSystem.Play();
     }
 
     private Bullet CreateBullet()
@@ -117,6 +150,13 @@ public class BulletSystem : Singleton<BulletSystem>
         lastPlayerPosition = playerPosition;
         hadPlayer = player;
         float dt = Time.deltaTime;
+
+        rocks.Clear();
+        IReadOnlyList<Asteroid> asteroids = Asteroid.Active;
+        for (int i = 0; i < asteroids.Count; ++i)
+        {
+            rocks.Add(new Rock { position = asteroids[i].transform.position, radius = asteroids[i].Radius });
+        }
 
         for (int i = active.Count - 1; i >= 0; --i)
         {
@@ -169,13 +209,12 @@ public class BulletSystem : Singleton<BulletSystem>
     }
 
     // Asteroids soak up enemy fire, so they double as cover.
-    private static bool HitsAsteroid(Bullet bullet)
+    private bool HitsAsteroid(Bullet bullet)
     {
-        IReadOnlyList<Asteroid> asteroids = Asteroid.Active;
-        for (int i = 0; i < asteroids.Count; ++i)
+        for (int i = 0; i < rocks.Count; ++i)
         {
-            float reach = asteroids[i].Radius + bullet.radius;
-            if ((bullet.position - (Vector2)asteroids[i].transform.position).sqrMagnitude <= reach * reach)
+            float reach = rocks[i].radius + bullet.radius;
+            if ((bullet.position - rocks[i].position).sqrMagnitude <= reach * reach)
             {
                 return true;
             }
@@ -207,9 +246,10 @@ public class BulletSystem : Singleton<BulletSystem>
     {
         for (int i = active.Count - 1; i >= 0; --i)
         {
-            if (clearSparks && i % 4 == 0)
+            if (clearSparkSystem && i % 4 == 0)
             {
-                PoolManager.Spawn(clearSparks, active[i].position, Quaternion.identity);
+                var emit = new ParticleSystem.EmitParams { position = active[i].position, applyShapeToPosition = true };
+                clearSparkSystem.Emit(emit, sparksPerBurst);
             }
             Recycle(i);
         }

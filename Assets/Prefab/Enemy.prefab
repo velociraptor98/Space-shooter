@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 4505973792852848846}
   - component: {fileID: 3373170049888444626}
   - component: {fileID: 2565282080366182920}
-  m_Layer: 0
+  m_Layer: 11
   m_Name: Exhaust Left
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -2315,7 +2315,7 @@ GameObject:
   - component: {fileID: 4989893161662866219}
   - component: {fileID: 3817911151951691584}
   - component: {fileID: 5742714376199408574}
-  m_Layer: 0
+  m_Layer: 11
   m_Name: Enemy
   m_TagString: Enemy
   m_Icon: {fileID: 0}
@@ -2422,9 +2422,9 @@ Rigidbody2D:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2442539865020007080}
-  m_BodyType: 0
+  m_BodyType: 1
   m_Simulated: 1
-  m_UseFullKinematicContacts: 0
+  m_UseFullKinematicContacts: 1
   m_UseAutoMass: 0
   m_Mass: 1
   m_LinearDamping: 0
@@ -2671,7 +2671,7 @@ GameObject:
   - component: {fileID: 4504632667478673617}
   - component: {fileID: 1039477347518569427}
   - component: {fileID: 4725661352346470997}
-  m_Layer: 0
+  m_Layer: 11
   m_Name: Exhaust Right
   m_TagString: Untagged
   m_Icon: {fileID: 0}

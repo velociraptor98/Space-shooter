@@ -19,11 +19,11 @@ TagManager:
   - 
   - 
   - PostProcess
-  - 
-  - 
-  - 
-  - 
-  - 
+  - Player
+  - PlayerShot
+  - Enemy
+  - Asteroid
+  - Pickup
   - 
   - 
   - 

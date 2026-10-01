@@ -60,18 +60,9 @@ GROUPS = [
     dict(name="explosion", glob="Explosion/*.png", scale=1.0, colors=FIRE, alpha="solid", flatten=True, fire="all"),
     dict(name="engine_fire", glob="Player_Hurt/*.png", scale=0.5, colors=["steel", "slate", "silver"], alpha="solid", fire="bright"),
     dict(name="shield", glob="Player_Shield/*.png", scale=1.0, colors=["blue", "sky", "cyan", "white"], alpha="translucent"),
-    dict(name="powerup_triple", glob="Power_Ups/Triple_Shot/*.png", scale=0.5, colors=HULL + ["green", "lime"],
-         alpha="solid", outline=True, strip_label=True),
-    dict(name="powerup_speed", glob="Power_Ups/Speed/*.psd", scale=0.5, colors=HULL + ["red", "orange"],
-         alpha="solid", outline=True, strip_label=True),
-    dict(name="powerup_shield", glob="Power_Ups/Shield/*.png", scale=0.5, colors=HULL + ["sky", "cyan"],
-         alpha="solid", outline=True, strip_label=True),
     dict(name="laser", glob="laser.png", scale=0.83, colors=["red", "orange", "yellow", "white"], alpha="solid"),
     dict(name="lives", glob="UI/Lives/*.png", ui_size=(64, 32), colors=HULL + ["sky", "orange"], alpha="solid"),
 ]
-# The power-up art has its name printed underneath; at retro size it is an unreadable smear, so the
-# colour-coded pod carries the meaning instead. Rows at or below this (in source pixels) are dropped.
-LABEL_TOP = 330
 
 
 def list_originals(pattern):
@@ -207,8 +198,6 @@ def process_group(group, preview_dir):
     small = []
     for rel in rel_paths:
         image = load_original(rel)
-        if group.get("strip_label"):
-            image.paste((0, 0, 0, 0), (0, LABEL_TOP, image.width, image.height))
         if "ui_size" in group:
             size = group["ui_size"]
         else:

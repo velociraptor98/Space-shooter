@@ -56,13 +56,14 @@ public static class Playfield
     }
 
     // Measured once per camera. The arena is centred where the camera starts, before it moves or shakes.
+    // Only looks for the camera again once the measured one is gone (the scene changed).
     private static void Measure()
     {
-        Camera cam = Camera.main;
-        if (cam == measuredCamera)
+        if (measuredCamera)
         {
             return;
         }
+        Camera cam = Camera.main;
         measuredCamera = cam;
         // The Pixel Perfect Camera's reference resolution defines the view exactly, even before the
         // camera has rendered and settled its own size and aspect.

@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 5105064603485535317}
   - component: {fileID: 2221091839881636331}
   - component: {fileID: 3591888529757011884}
-  m_Layer: 0
+  m_Layer: 12
   m_Name: Asteroid Medium
   m_TagString: Asteroid
   m_Icon: {fileID: 0}
@@ -140,9 +140,9 @@ Rigidbody2D:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 597076717597142491}
-  m_BodyType: 0
+  m_BodyType: 1
   m_Simulated: 1
-  m_UseFullKinematicContacts: 0
+  m_UseFullKinematicContacts: 1
   m_UseAutoMass: 0
   m_Mass: 1
   m_LinearDamping: 0
